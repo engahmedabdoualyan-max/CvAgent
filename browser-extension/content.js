@@ -363,6 +363,14 @@ async function dispatch(act, siteDomain, aliasMode) {
 
   if (kind === "skip") return false;
 
+  // PLACEHOLDER GUARD — never type template values (YOUR_IQAMA_NUMBER, TODO...)
+  // into a live application. If you see this warning, put your real value in
+  // your local profile.json first.
+  if (kind === "fill" && /^YOUR_[A-Z_]+|^PLACEHOLDER|^TODO\b|^\[.*\]$|^xxx+$/i.test(value)) {
+    console.warn("[CvAgent] ⚠ skipped placeholder value for a field — update your profile.json with the real data:", value);
+    return false;
+  }
+
   if (kind === "fill") {
     if (aliasMode && el.type === "email" && value.includes("@") && !value.includes("+"))
       value = aliasEmail(value, siteDomain);

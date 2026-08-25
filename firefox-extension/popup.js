@@ -118,6 +118,9 @@ async function refreshSteps() {
   $("profileName").textContent = hasProfile
     ? "✔ " + (st.profileName || "profile.json") + (st.vaultEnabled ? " (مشفرة 🔒)" : "")
     : "";
+  // placeholder warning: iqama still the template value?
+  if (st.profile && st.profile.ids && /^YOUR_/.test(st.profile.ids.iqama_number || ""))
+    $("profileName").textContent += " — ⚠ رقم الإقامة لسه فاضي: عدّله في الملف قبل التقديم";
   $("step3num").textContent = $("onOff").checked ? "✓" : "3";
   $("step3num").classList.toggle("done", $("onOff").checked);
   $("step3ok").textContent = $("onOff").checked ? "✔" : "";
