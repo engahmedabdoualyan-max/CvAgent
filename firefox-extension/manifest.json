@@ -3,6 +3,12 @@
   "name": "CvAgent — AI Career OS",
   "version": "3.0.0",
   "description": "Full AI Career OS: ON/OFF form auto-fill, JD scoring, tailored CV, cover letters, interview audio prep, voice-to-form, vault encryption, trackers & 30-feature suite. Powered by Groq Llama.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "cvagent@engahmedabdoualyan-max.github.io",
+      "strict_min_version": "115.0"
+    }
+  },
   "permissions": ["storage", "scripting", "activeTab", "tabs", "declarativeNetRequest", "contextMenus"],
   "commands": {
     "fill-page": {
@@ -12,7 +18,7 @@
   },
   "host_permissions": ["https://api.groq.com/*", "<all_urls>"],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
   "action": {
     "default_popup": "popup.html",
@@ -38,12 +44,7 @@
       }
     ]
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["injector.js"],
-      "matches": ["<all_urls>"]
-    }
-  ],
+  "web_accessible_resources": ["injector.js"],
   "icons": {
     "128": "icon.png"
   }

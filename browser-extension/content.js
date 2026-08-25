@@ -8,6 +8,17 @@
 
 let RUNNING = false;
 
+// ===========================================================================
+// SINGLE-OWNER GUARD — Workday is an SPA: navigating application steps does
+// NOT reload the page, so content scripts pile up (old + new). Two live
+// scripts double-tag fields (data-cvagent-idx collisions) which caused
+// values landing in the WRONG inputs, and the pill belonged to a dead
+// instance. Rule: the newest script owns the page; older ones retire.
+// ===========================================================================
+const MY_ID = "cv" + Math.random().toString(36).slice(2);
+window.__cvagentOwner = MY_ID;
+const isOwner = () => window.__cvagentOwner === MY_ID;
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Extension context guard: after the extension is reloaded/updated, old
@@ -20,7 +31,11 @@ const ctxAlive = () => {
 
 // ---------------------------------------------------------------- pill UI
 function ensurePill() {
-  if (document.getElementById("cvagent-pill")) return;
+  // newest script always owns the pill — retire any stale instance's pill
+  const stale = document.getElementById("cvagent-pill");
+  if (stale) stale.remove();
+  const staleMic = document.getElementById("cvagent-mic");
+  if (staleMic) staleMic.remove();
   const pill = document.createElement("div");
   pill.id = "cvagent-pill";
   pill.style.cssText = [
@@ -32,7 +47,7 @@ function ensurePill() {
   ].join(";");
   pill.title = "Click = fill page · Double-click = AI captcha hint";
   pill.textContent = "🤖 CvAgent — Fill this page";
-  pill.addEventListener("click", () => runAgent());
+  pill.addEventListener("click", () => { if (isOwner()) runAgent(); });
   pill.addEventListener("dblclick", () => visionAssist());
   document.documentElement.appendChild(pill);
   injectSniffer();
@@ -158,6 +173,7 @@ function extractFields() {
       automationId: el.getAttribute("data-automation-id") || "",
       label: labelText, question: questionContext,
       value: (el.value || "").slice(0, 80),
+      checked: el.checked || false,
       readOnly: el.readOnly || false,
       required: el.required || el.getAttribute("aria-required") === "true",
       isCombobox: el.getAttribute("role") === "combobox" || el.getAttribute("aria-haspopup") !== null ||
@@ -598,7 +614,7 @@ async function snapshotPage() {
 
 // ---------------------------------------------------------------- main flow
 async function runAgent() {
-  if (!ctxAlive()) { removePill(); hideMic(); return; }
+  if (!isOwner() || !ctxAlive()) { removePill(); hideMic(); return; }
   if (RUNNING) return;
   RUNNING = true;
   try {
@@ -655,11 +671,19 @@ async function runAgent() {
     // first pass missed (Arabic labels included).
     // ------------------------------------------------------------------
     const identityRx = /first|middle|last|full|legal|name|اسم|بريد|e-?mail|phone|mobile|جوال|هاتف|موبايل|city|مدينة|country|دولة|الجنسية|nationality|postal|الرمز البريدي|date of birth|dob|تاريخ الميلاد|iqama|إقامة|الاقامة|الهيئة|sce/i;
-    const stillEmpty = fields.filter((f) =>
-      !attempted.has(f.index) && !f.value &&
-      f.type !== "checkbox" && f.type !== "radio" && f.type !== "file" &&
-      identityRx.test([f.label, f.question, f.name, f.id, f.placeholder, f.ariaLabel, f.automationId].join(" "))
-    );
+    const yesNoQuestionRx = /نعم|لا|authorized|relocat|travel|over 18|terms|consent|agree|مفوض|انتقال|سفر|موافق|شروط|خصوصية|أوافق|^y(es)?|^n(o)?$/i;
+    const stillEmpty = fields.filter((f) => {
+      if (attempted.has(f.index)) return false;
+      const hay = [f.label, f.question, f.name, f.id, f.placeholder, f.ariaLabel, f.automationId].join(" ");
+      if (f.type === "file") return false;
+      // radios/checkboxes: check the checked-state and the question — not just the identity regex
+      if (f.type === "checkbox" || f.type === "radio") {
+        if (f.checked) return false; // already answered
+        return identityRx.test(hay) || yesNoQuestionRx.test(hay + " " + f.question);
+      }
+      // text/select/textarea: must have empty value and match an identity pattern
+      return !f.value && identityRx.test(hay);
+    });
     if (stillEmpty.length) {
       setStatus(`retrying ${stillEmpty.length} mandatory field(s) in STRICT mode...`, true);
       try {
@@ -732,13 +756,14 @@ function refineSpeech(text) {
 }
 
 function showMic() {
-  if (!ctxAlive()) { hideMic(); removePill(); return; }
+  if (!isOwner() || !ctxAlive()) { hideMic(); removePill(); return; }
   chrome.storage.local.get("agentOn").then(({ agentOn }) => {
     const active = document.activeElement;
     const isText = active && (active.tagName === "TEXTAREA" || (active.tagName === "INPUT" && /text|search|email|url|tel/i.test(active.type)));
     if (!agentOn || !isText) { hideMic(); return; }
     if (micBtn) return;
     micBtn = document.createElement("div");
+    micBtn.id = "cvagent-mic";
     micBtn.textContent = "🎤";
     micBtn.title = "CvAgent voice-to-form — click & speak";
     micBtn.style.cssText = "position:fixed;bottom:100px;right:18px;z-index:2147483647;background:#27ae60;color:#fff;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.35)";
@@ -788,7 +813,7 @@ async function applyState() {
 // so it never fires on random websites)
 // ===========================================================================
 async function maybeAutoRun() {
-  if (!ctxAlive()) { removePill(); hideMic(); return; }
+  if (!isOwner() || !ctxAlive()) { removePill(); hideMic(); return; }
   try {
     const st = await chrome.storage.local.get(["agentOn", "autoRun"]);
     if (!st.agentOn || !st.autoRun) return;
@@ -818,7 +843,7 @@ async function maybeAutoRun() {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "STATE") applyState();
-  if (msg.type === "RUN_NOW") runAgent();
+  if (msg.type === "RUN_NOW") { if (isOwner()) runAgent(); }
   if (msg.type === "GET_JD") {
     // page text for scoring / tailoring / cover letters (trimmed)
     const text = (document.body ? document.body.innerText : "").replace(/\n{3,}/g, "\n\n").slice(0, 8000);
