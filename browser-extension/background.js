@@ -44,6 +44,29 @@ Rules:
   * fill -> exact text for text/textarea/email/tel/url/date fields.
   * select -> EXACT option text from that field's "options" array.
   * pick -> option text inside a CUSTOM combobox (isCombobox true).
+
+MANDATORY IDENTITY FIELDS — NEVER skip, NEVER return "skip" for these:
+  * First name / الاسم الأول / الاسم الشخصي          -> "Ahmed"
+  * Middle name / الاسم الأوسط                       -> "Mohamed Abdo Elsayed"
+  * Last name / الاسم الأخير / اسم العائلة            -> "Alyan"
+  * Full name / Legal name / الاسم رباعي / الاسم الكامل -> "Ahmed Mohamed Abdo Elsayed Alyan"
+  * Arabic name fields (الاسم بالعربية، الاسم بالعربي، الاسم) -> "أحمد محمد عبده السيد عليان" (profile.arabic_name)
+  * Email / البريد الإلكتروني / الايميل               -> profile.email
+  * Phone / الجوال / الهاتف / الموبايل / رقم الجوال    -> profile.phone_ksa
+  * City / المدينة, Country / الدولة, Postal / الرمز البريدي, DOB / تاريخ الميلاد -> from profile
+  These are REQUIRED by every application — always return an action for them.
+
+YES/NO SCREENING QUESTIONS (Arabic OR English):
+  * نعم = Yes, لا = No, موافق = I agree.
+  * For every yes/no radio group you MUST click the option matching the
+    truthful profile answer:
+      - work authorization / مفوض بالعمل / المصرح لهم بالعمل -> نعم
+      - willing to relocate / الاستعداد للانتقال -> نعم
+      - travel / السفر -> نعم | over 18 -> نعم
+      - terms / consent / الموافقة على الشروط / سياسة الخصوصية -> نعم
+  * NEVER lie on knockout questions — if truly absent from profile, skip.
+
+General:
   * NEVER invent data not derivable from the profile. If unsure -> "skip".
   * Dates: MM/DD/YYYY unless the placeholder shows another format.
   * Phone: +966500439617 (KSA), +201001006627 (Egypt).
@@ -61,7 +84,11 @@ Rules:
 
 PERSONA MODE: user message may include "ACTIVE PERSONA: <name>":
   Manager -> operations leadership & KPIs | Technical -> mix-design/QA/ERP depth
-  Executive -> P&L ownership & multi-site strategy | Balanced -> default blend.`;
+  Executive -> P&L ownership & multi-site strategy | Balanced -> default blend.
+
+STRICT MODE: when the user message starts with "STRICT MODE", EVERY listed
+field MUST receive a fill/select/pick/click action derived from the profile —
+"skip" is FORBIDDEN. If a label is Arabic, answer in Arabic.`;
 
 // ---------------------------------------------------------------------------
 // Groq chat (text or vision)
@@ -300,6 +327,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             msg.fields.map((f) => f.question || f.label).join(" "), profile, 2); // F06
 
           const userMsg =
+            (msg.strict ? "STRICT MODE — fill ALL of these fields from the profile. skip is forbidden.\n\n" : "") +
             (st.persona && st.persona !== "Balanced" ? `ACTIVE PERSONA: ${st.persona}\n\n` : "") +
             (memory.length ? `CAREER MEMORY HITS:\n${JSON.stringify(memory)}\n\n` : "") +
             "PAGE FIELDS:\n" + JSON.stringify(msg.fields) +

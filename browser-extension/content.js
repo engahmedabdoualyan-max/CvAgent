@@ -215,6 +215,9 @@ async function humanType(el, value) {
     await sleep(12 + Math.random() * 48);
     if (Math.random() < 0.06) await sleep(90 + Math.random() * 120);
   }
+  // safety net: React/workday inputs sometimes swallow the last chars —
+  // force the exact final value so the field is never left half-typed.
+  if (el.value !== value) setNativeValue(el, value);
   el.blur();
 }
 
@@ -334,25 +337,49 @@ function offlineMap(fields) {
   return new Promise((resolve) => {
     chrome.storage.local.get("profile", async ({ profile }) => {
       const p = profile || (await chrome.runtime.sendMessage({ type: "GET_PLAIN_PROFILE" }).catch(() => ({}))) || {};
+      // Arabic rules FIRST (more specific), then English
       const rules = [
-        { rx: /first name/i, val: p.first_name }, { rx: /(last|family|sur)name/i, val: p.last_name },
-        { rx: /full name|legal name/i, val: p.full_name }, { rx: /e-?mail/i, val: p.email },
-        { rx: /phone|mobile|cell|whatsapp/i, val: p.phone_ksa }, { rx: /city/i, val: p.current_location?.city },
-        { rx: /province|state/i, val: p.current_location?.province_state },
-        { rx: /country/i, val: p.current_location?.country }, { rx: /postal|zip/i, val: p.current_location?.postal_code },
-        { rx: /linkedin/i, val: p.links?.linkedin }, { rx: /years.*(experience|work)/i, val: "20" },
-        { rx: /date of birth|birth date|dob/i, val: p.date_of_birth }, { rx: /nationality/i, val: p.nationality },
-        { rx: /(iqama|residency|residence) (number|no|id)/i, val: p.ids?.iqama_number },
-        { rx: /saudi council|sce/i, val: p.ids?.saudi_council_of_engineers }
+        { rx: /الاسم الأول|الاسم الاول|الاسم الشخصي/i,            val: p.first_name },
+        { rx: /الاسم الأخير|الاسم الاخير|اسم العائلة|اسم العائله/i, val: p.last_name },
+        { rx: /الاسم بالعربية|الاسم بالعربي|الاسم رباعي|الاسم الكامل|^الاسم$/i, val: p.arabic_name },
+        { rx: /الاسم بالإنجليزية|الاسم بالانجليزي|full name|legal name/i, val: p.full_name },
+        { rx: /first name/i,                                       val: p.first_name },
+        { rx: /(middle name)/i,                                    val: p.middle_name },
+        { rx: /(last|family|sur)name/i,                            val: p.last_name },
+        { rx: /البريد الإلكتروني|البريد الالكتروني|الايميل|الإيميل/i, val: p.email },
+        { rx: /e-?mail/i,                                          val: p.email },
+        { rx: /الجوال|الهاتف المحمول|الموبايل|رقم الجوال|رقم الهاتف|هاتفك/i, val: p.phone_ksa },
+        { rx: /phone|mobile|cell|whatsapp/i,                       val: p.phone_ksa },
+        { rx: /المدينة/i,                                          val: p.current_location?.city },
+        { rx: /city/i,                                             val: p.current_location?.city },
+        { rx: /الحي|المنطقة|المحافظة/i,                            val: p.current_location?.province_state },
+        { rx: /province|state/i,                                   val: p.current_location?.province_state },
+        { rx: /الدولة|البلد/i,                                     val: p.current_location?.country },
+        { rx: /country/i,                                          val: p.current_location?.country },
+        { rx: /الرمز البريدي/i,                                    val: p.current_location?.postal_code },
+        { rx: /postal|zip/i,                                       val: p.current_location?.postal_code },
+        { rx: /العنوان/i,                                          val: p.current_location?.full_address },
+        { rx: /linkedin/i,                                         val: p.links?.linkedin },
+        { rx: /سنوات.*(خبرة|الخبرة)|years.*(experience|work)/i,    val: "20" },
+        { rx: /تاريخ الميلاد|تاريخ الميلاذ/i,                      val: p.date_of_birth },
+        { rx: /date of birth|birth date|dob/i,                     val: p.date_of_birth },
+        { rx: /الجنسية/i,                                          val: p.nationality },
+        { rx: /nationality/i,                                      val: p.nationality },
+        { rx: /رقم الهوية|رقم الاقامة|رقم الإقامة/i,               val: p.ids?.iqama_number },
+        { rx: /(iqama|residency|residence) (number|no|id)/i,       val: p.ids?.iqama_number },
+        { rx: /الهيئة السعودية|رقم العضوية/i,                      val: p.ids?.saudi_council_of_engineers },
+        { rx: /saudi council|sce\b/i,                              val: p.ids?.saudi_council_of_engineers }
       ];
       const boolRules = [
-        { rx: /legally authorized|authorized to work/i, val: p.booleans?.legally_authorized_to_work },
-        { rx: /willing to relocate|relocat/i, val: p.booleans?.willing_to_relocate },
-        { rx: /willing to travel|travel/i, val: p.booleans?.willing_to_travel },
-        { rx: /currently employed/i, val: p.booleans?.currently_employed },
-        { rx: /over (the age of )?18/i, val: p.booleans?.over_18 },
-        { rx: /terms|privacy policy|consent|agree/i, val: p.booleans?.agreed_to_terms }
+        { rx: /legally authorized|authorized to work|مفوض بالعمل|المصرح لهم بالعمل|مصرح/i, val: p.booleans?.legally_authorized_to_work },
+        { rx: /willing to relocate|relocat|الاستعداد للانتقال|الانتقال/i, val: p.booleans?.willing_to_relocate },
+        { rx: /willing to travel|travel|السفر|التنقل/i,         val: p.booleans?.willing_to_travel },
+        { rx: /currently employed|موظف حالياً|موظف حاليا/i,     val: p.booleans?.currently_employed },
+        { rx: /over (the age of )?18|18 years|أكثر من 18|اكثر من 18/i, val: p.booleans?.over_18 },
+        { rx: /terms|privacy policy|consent|agree|الموافقة|الموافقه|الشروط|سياسة الخصوصية|أوافق|اوافق/i, val: p.booleans?.agreed_to_terms }
       ];
+      const YES = /^(y(es)?|نعم|موافق|اجل)$/i;
+      const NO  = /^(n(o)?|لا|لا أوافق|لا اوافق)$/i;
       const actions = [];
       for (const f of fields) {
         const hay = [f.label, f.question, f.ariaLabel, f.name, f.placeholder, f.id, f.automationId].join(" ");
@@ -366,8 +393,8 @@ function offlineMap(fields) {
           if (b.rx.test(hay) && typeof b.val === "boolean") {
             if (f.type === "checkbox") actions.push({ index: f.index, action: b.val ? "check" : "uncheck" });
             else if (f.type === "radio") {
-              const label = (f.label || "").toLowerCase();
-              if ((b.val && /^y(es)?$/i.test(label)) || (!b.val && /^n(o)?$/i.test(label)))
+              const label = (f.label || "").trim();
+              if ((b.val && YES.test(label)) || (!b.val && NO.test(label)))
                 actions.push({ index: f.index, action: "click" });
             }
             break;
@@ -377,6 +404,49 @@ function offlineMap(fields) {
       resolve(actions);
     });
   });
+}
+
+// ===========================================================================
+// Deterministic YES/NO post-pass — guarantees نعم/لا radio groups get answered
+// even if the LLM hesitates. Truthful answers only, from profile.booleans.
+// ===========================================================================
+async function yesNoPostPass(fields, attempted) {
+  const resp = await chrome.runtime.sendMessage({ type: "GET_PLAIN_PROFILE" }).catch(() => null);
+  const p = (resp && resp.profile) || {};
+  if (!p.booleans) return 0;
+  const boolRules = [
+    { rx: /legally authorized|authorized to work|مفوض بالعمل|المصرح لهم بالعمل|مصرح/i, val: p.booleans.legally_authorized_to_work },
+    { rx: /willing to relocate|relocat|الاستعداد للانتقال|الانتقال/i, val: p.booleans.willing_to_relocate },
+    { rx: /willing to travel|travel|السفر|التنقل/i,         val: p.booleans.willing_to_travel },
+    { rx: /currently employed|موظف حالياً|موظف حاليا/i,     val: p.booleans.currently_employed },
+    { rx: /over (the age of )?18|18 years|أكثر من 18|اكثر من 18/i, val: p.booleans.over_18 },
+    { rx: /terms|privacy policy|consent|agree|الموافقة|الموافقه|الشروط|سياسة الخصوصية|أوافق|اوافق/i, val: p.booleans.agreed_to_terms }
+  ];
+  const YES = /^(y(es)?|نعم|موافق|اجل)$/i;
+  const NO  = /^(n(o)?|لا|لا أوافق|لا اوافق)$/i;
+  let clicks = 0;
+  for (const f of fields) {
+    if (f.type !== "radio" || attempted.has(f.index)) continue;
+    const label = (f.label || "").trim();
+    if (!YES.test(label) && !NO.test(label)) continue;
+    const q = f.question || f.label || "";
+    if (!q) continue;
+    for (const b of boolRules) {
+      if (b.rx.test(q) && typeof b.val === "boolean") {
+        const shouldClick = (b.val && YES.test(label)) || (!b.val && NO.test(label));
+        if (shouldClick) {
+          try {
+            const el = fieldByIndex(f.index);
+            if (el && !el.checked) el.click();
+            el && el.dispatchEvent(new Event("change", { bubbles: true }));
+            clicks++;
+          } catch (e) { /* keep going */ }
+        }
+        break;
+      }
+    }
+  }
+  return clicks;
 }
 
 // ---------------------------------------------------------------- flow
@@ -460,10 +530,44 @@ async function runAgent() {
     }
 
     const st = await chrome.storage.local.get(["aliasMode", "autoNext"]);
+    const attempted = new Set(
+      [...pre, ...actions].filter((a) => (a.action || "").toLowerCase() !== "skip").map((a) => a.index)
+    );
     for (const act of actions) {
       try { if (await dispatch(act, location.hostname, !!st.aliasMode)) ok++; }
       catch (e) { console.warn("[CvAgent] action failed, continuing:", e); }
     }
+
+    // ------------------------------------------------------------------
+    // MANDATORY second pass: identity fields (name/email/phone/city/dob/IDs)
+    // must NEVER stay empty. Re-ask the LLM in STRICT MODE for whatever the
+    // first pass missed (Arabic labels included).
+    // ------------------------------------------------------------------
+    const identityRx = /first|middle|last|full|legal|name|اسم|بريد|e-?mail|phone|mobile|جوال|هاتف|موبايل|city|مدينة|country|دولة|الجنسية|nationality|postal|الرمز البريدي|date of birth|dob|تاريخ الميلاد|iqama|إقامة|الاقامة|الهيئة|sce/i;
+    const stillEmpty = fields.filter((f) =>
+      !attempted.has(f.index) && !f.value &&
+      f.type !== "checkbox" && f.type !== "radio" && f.type !== "file" &&
+      identityRx.test([f.label, f.question, f.name, f.id, f.placeholder, f.ariaLabel, f.automationId].join(" "))
+    );
+    if (stillEmpty.length) {
+      setStatus(`retrying ${stillEmpty.length} mandatory field(s) in STRICT mode...`, true);
+      try {
+        const r2 = await chrome.runtime.sendMessage({ type: "GET_ACTIONS", fields: stillEmpty, strict: true });
+        if (r2 && r2.ok) {
+          for (const act of r2.actions) {
+            try { if (await dispatch(act, location.hostname, !!st.aliasMode)) ok++; }
+            catch (e) { console.warn(e); }
+          }
+        }
+      } catch (e) { console.warn("[CvAgent] strict pass failed:", e); }
+    }
+
+    // ------------------------------------------------------------------
+    // Deterministic نعم/لا post-pass — never leave yes/no groups unanswered
+    // ------------------------------------------------------------------
+    const yn = await yesNoPostPass(fields, attempted);
+    if (yn) { ok += yn; console.log("[CvAgent] yes/no post-pass clicked", yn); }
+
     console.log("[CvAgent] report:", { pre: pre.length, llm: actions.length, ok, sniffed: sniffedEndpoints.length });
 
     if (ok >= 3 && actions.length)
