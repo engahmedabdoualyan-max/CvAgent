@@ -49,25 +49,37 @@ HARD RULES:
   * Phone: +966500439617 for KSA contexts, +201001006627 for Egypt.
   * Address: Dammam, Eastern Province, Saudi Arabia, postal 31411.
   * Do NOT return actions for fields whose current value is already correct.
-  * Output ONLY the JSON object.`;
+  * Output ONLY the JSON object.
+
+PROOF-LINKED ANSWERS (feature 17):
+  * When an essay answer mentions his systems or portfolio, append the real
+    URLs from profile.links (e.g. https://concrete.fimtosoft.com) naturally
+    inside the sentence — verifiable proof beats adjectives.
+
+PERSONA MODE (feature 20):
+  * The user message may include "ACTIVE PERSONA: <name>". Adapt essay tone:
+    - Manager      -> people/operations leadership, KPIs, plant P&L outcomes
+    - Technical    -> mix design, QA/QC science, ERP/AI engineering depth
+    - Executive    -> P&L ownership, strategy, multi-site governance
+    - Balanced     -> default blend (use when absent)`;
 
 // ---------------------------------------------------------------------------
 // Groq call
 // ---------------------------------------------------------------------------
-async function askGroq(apiKey, model, fields, profile) {
+async function askGroq(apiKey, model, fields, profile, persona) {
+  const userMsg =
+    (persona && persona !== "Balanced" ? `ACTIVE PERSONA: ${persona}\n\n` : "") +
+    "PAGE FIELDS:\n" + JSON.stringify(fields) +
+    "\n\nCANDIDATE PROFILE:\n" + JSON.stringify(profile) +
+    "\n\nReturn the actions JSON now.";
+
   const body = {
     model: model || DEFAULT_MODEL,
     temperature: 0,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content:
-          "PAGE FIELDS:\n" + JSON.stringify(fields) +
-          "\n\nCANDIDATE PROFILE:\n" + JSON.stringify(profile) +
-          "\n\nReturn the actions JSON now."
-      }
+      { role: "user", content: userMsg }
     ]
   };
 
@@ -97,15 +109,41 @@ async function askGroq(apiKey, model, fields, profile) {
 // Message router
 // ---------------------------------------------------------------------------
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  // ---- FEATURE 09: application tracker ------------------------------------
+  if (msg.type === "TRACK") {
+    (async () => {
+      const { tracker = [] } = await chrome.storage.local.get("tracker");
+      tracker.unshift({ ...msg.data, id: Date.now() });
+      await chrome.storage.local.set({ tracker: tracker.slice(0, 500) });
+      sendResponse({ ok: true, count: tracker.length });
+    })();
+    return true;
+  }
+  if (msg.type === "GET_TRACKER") {
+    (async () => {
+      const { tracker = [] } = await chrome.storage.local.get("tracker");
+      sendResponse({ ok: true, tracker });
+    })();
+    return true;
+  }
+  if (msg.type === "CLEAR_TRACKER") {
+    (async () => {
+      await chrome.storage.local.set({ tracker: [] });
+      sendResponse({ ok: true });
+    })();
+    return true;
+  }
+
+  // ---- LLM mapping ---------------------------------------------------------
   if (msg.type !== "GET_ACTIONS") return false;
 
   (async () => {
     try {
-      const st = await chrome.storage.local.get(["apiKey", "profile", "model"]);
+      const st = await chrome.storage.local.get(["apiKey", "profile", "model", "persona"]);
       if (!st.apiKey) return sendResponse({ ok: false, error: "No API key set — open the CvAgent popup and add your Groq key." });
       if (!st.profile) return sendResponse({ ok: false, error: "No profile loaded — open the popup and load profile.json." });
 
-      const actions = await askGroq(st.apiKey, st.model, msg.fields, st.profile);
+      const actions = await askGroq(st.apiKey, st.model, msg.fields, st.profile, st.persona);
       sendResponse({ ok: true, actions });
     } catch (err) {
       sendResponse({ ok: false, error: String(err.message || err) });

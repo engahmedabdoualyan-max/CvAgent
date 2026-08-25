@@ -71,6 +71,43 @@
   </div>
 
   <div class="card">
+    <div class="row" style="margin-bottom:8px;">
+      <div>
+        <div class="lbl">شخصية الإجابات (Persona)</div>
+        <div class="hint">بتتحكم في نبرة الأسئلة المقالية</div>
+      </div>
+    </div>
+    <select id="persona" style="width:100%;padding:7px 9px;border:1px solid #d5dde6;border-radius:7px;font-size:12px;">
+      <option value="Balanced">⚖️ Balanced — متوازنة (افتراضي)</option>
+      <option value="Manager">👔 Manager — قيادة عمليات</option>
+      <option value="Technical">🔬 Technical — عمق فني</option>
+      <option value="Executive">📈 Executive — استراتيجي</option>
+    </select>
+    <div class="row" style="margin-top:10px;">
+      <div>
+        <div class="lbl">ضغط Next تلقائي</div>
+        <div class="hint">لو مقفول: انت بتدوس Next بنفسك (أأمن)</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="autoNext">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="lbl">📋 سجل التقديمات</div>
+        <div class="hint">بيتسجل تلقائياً لما توصل لصفحة Submit</div>
+      </div>
+      <span id="trackCount" class="lbl" style="background:var(--navy);color:#fff;padding:3px 10px;border-radius:12px;">0</span>
+    </div>
+    <button id="exportCsv" class="secondary" style="margin-top:8px;">⬇️ تصدير CSV</button>
+    <button id="clearTracker" style="background:#95a3b3;margin-top:6px;">🗑 مسح السجل</button>
+  </div>
+
+  <div class="card">
     <button id="fillNow">🚀 املأ الصفحة الحالية دلوقتي</button>
     <div id="status"></div>
   </div>

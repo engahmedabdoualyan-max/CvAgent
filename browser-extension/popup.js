@@ -6,9 +6,12 @@ const $ = (id) => document.getElementById(id);
 
 // ---------------------------------------------------------------- restore UI
 document.addEventListener("DOMContentLoaded", async () => {
-  const st = await chrome.storage.local.get(["agentOn", "apiKey", "profile", "profileName", "model"]);
+  const st = await chrome.storage.local.get(["agentOn", "apiKey", "profile", "profileName", "model", "persona", "autoNext", "tracker"]);
   $("onOff").checked = !!st.agentOn;
   $("apiKey").value = st.apiKey || "";
+  $("persona").value = st.persona || "Balanced";
+  $("autoNext").checked = !!st.autoNext;
+  $("trackCount").textContent = (st.tracker || []).length;
   $("profileName").textContent = st.profileName
     ? "✔ محمّل: " + st.profileName
     : "❌ لسه مرفعش — ارفع profile.json";
@@ -56,6 +59,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     };
     reader.readAsText(file);
+  });
+
+  // ------------------------------------------------------------- persona
+  $("persona").addEventListener("change", async (e) => {
+    await chrome.storage.local.set({ persona: e.target.value });
+    setStatus("الشخصية: " + e.target.value + " ✔");
+  });
+
+  // ------------------------------------------------------------- autoNext
+  $("autoNext").addEventListener("change", async (e) => {
+    await chrome.storage.local.set({ autoNext: e.target.checked });
+    setStatus(e.target.checked ? "Next تلقائي ON" : "Next يدوي (أأمن)");
+  });
+
+  // -------------------------------------------------------- tracker tools
+  $("exportCsv").addEventListener("click", async () => {
+    const { tracker = [] } = await chrome.storage.local.get("tracker");
+    if (!tracker.length) return setStatus("السجل فاضي");
+    const rows = [["Date", "Title", "URL", "Fields", "SensitiveFlags"],
+      ...tracker.map((t) => [t.date, t.title, t.url, t.filled, t.sensitive])];
+    const csv = rows.map((r) => r.map((c) => `"${String(c || "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "cvagent_applications.csv";
+    a.click();
+    setStatus("تم تصدير " + tracker.length + " تقديم ✔");
+  });
+
+  $("clearTracker").addEventListener("click", async () => {
+    await chrome.storage.local.set({ tracker: [] });
+    $("trackCount").textContent = "0";
+    setStatus("السجل اتمسح");
   });
 
   // ------------------------------------------------------------ fill now
