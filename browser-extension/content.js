@@ -164,11 +164,41 @@ function extractFields() {
 const fieldByIndex = (i) => deepQueryAll(`[data-cvagent-idx="${i}"]`)[0];
 
 // ===========================================================================
-// CUSTOM DROPDOWN ENGINE — robust against:
-//   * slow-rendering popups (polls up to ~2.5s instead of a fixed 500ms wait)
-//   * type-to-filter comboboxes (types the value, then searches the list)
-//   * slight text differences (exact -> startsWith -> contains matching)
-//   * two full attempts before giving up
+// REAL MOUSE SIMULATION — many custom dropdowns (Workday included) ignore a
+// bare .click() and only open on a genuine press sequence:
+//   pointermove -> pointerdown -> mousedown -> pointerup -> mouseup -> click
+// ===========================================================================
+function fireMouse(el, type) {
+  const r = el.getBoundingClientRect();
+  const common = {
+    bubbles: true, cancelable: true, view: window,
+    clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, button: 0
+  };
+  try {
+    if (type === "mousedown") el.dispatchEvent(new PointerEvent("pointerdown", { ...common, buttons: 1 }));
+    if (type === "mouseup") el.dispatchEvent(new PointerEvent("pointerup", { ...common, buttons: 0 }));
+    if (type === "mousemove") el.dispatchEvent(new PointerEvent("pointermove", { ...common, buttons: 0 }));
+    el.dispatchEvent(new MouseEvent(type, common));
+  } catch (e) { /* older browsers */ }
+}
+
+async function realClick(el) {
+  try { el.scrollIntoView({ block: "center" }); } catch (e) { /* ignore */ }
+  await sleep(80);
+  try { el.focus && el.focus(); } catch (e) { /* ignore */ }
+  fireMouse(el, "mousemove");
+  fireMouse(el, "mousedown");
+  fireMouse(el, "mouseup");
+  el.click();
+}
+
+// ===========================================================================
+// CUSTOM DROPDOWN ENGINE — handles every open style:
+//   A) press-to-open  (full realistic click)      -> poll up to 4s
+//   B) hover-to-open  (mouseenter/mouseover)      -> poll up to 1.5s
+//   C) keyboard-open  (ArrowDown on focused box)  -> poll up to 1.5s
+//   D) type-to-filter (types value, list narrows) -> poll up to 2s
+//   ... x2 full rounds, with fuzzy option matching
 // ===========================================================================
 function findOption(value) {
   const v = value.toLowerCase().trim();
@@ -181,22 +211,45 @@ function findOption(value) {
       || null;
 }
 
-async function customPick(el, value) {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try { el.click(); } catch (e) { /* some need focus first */ }
-    for (let i = 0; i < 10; i++) {                    // poll ~2.5s for popup
+async function pollOption(value, ms) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    const opt = findOption(value);
+    if (opt) {
+      try { await realClick(opt); } catch (e) { opt.click(); }
       await sleep(250);
-      const opt = findOption(value);
-      if (opt) { opt.click(); await sleep(250); return true; }
+      return true;
     }
-    // type-to-search combobox: type the value then look again
+    await sleep(200);
+  }
+  return false;
+}
+
+async function customPick(el, value) {
+  for (let round = 0; round < 2; round++) {
+    // A) press-to-open
+    await realClick(el);
+    if (await pollOption(value, 4000)) return true;
+
+    // B) hover-to-open
+    fireMouse(el, "mousemove");
+    try { el.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })); } catch (e) { /* ignore */ }
+    if (await pollOption(value, 1500)) return true;
+
+    // C) keyboard-open
+    try {
+      el.focus();
+      el.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
+    } catch (e) { /* ignore */ }
+    if (await pollOption(value, 1500)) return true;
+
+    // D) type-to-filter
     try {
       el.focus();
       setNativeValue(el, value);
+      el.dispatchEvent(new KeyboardEvent("keyup", { key: "a", bubbles: true }));
     } catch (e) { /* ignore */ }
-    await sleep(650);
-    const opt = findOption(value);
-    if (opt) { opt.click(); await sleep(250); return true; }
+    if (await pollOption(value, 2000)) return true;
   }
   document.activeElement && document.activeElement.blur();
   await sleep(200);
