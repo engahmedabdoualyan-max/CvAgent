@@ -3,118 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  :root { --navy:#1F3A5F; --orange:#E87722; }
+  :root { --navy:#1F3A5F; --orange:#E87722; --green:#27ae60; }
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Arial,sans-serif; }
-  body { width:320px; background:#f4f6f9; color:#2E3440; }
-  header { background:linear-gradient(90deg,var(--navy),#16304F); color:#fff; padding:14px 16px; }
+  body { width:360px; background:#f4f6f9; color:#2E3440; max-height:580px; overflow-y:auto; }
+  header { background:linear-gradient(90deg,var(--navy),#16304F); color:#fff; padding:12px 16px; position:sticky; top:0; z-index:9;}
   header h1 { font-size:15px; display:flex; align-items:center; gap:8px; }
-  header p  { font-size:10.5px; opacity:.85; margin-top:3px; }
-  .card { background:#fff; margin:10px 12px; border-radius:10px; padding:12px 14px;
-          box-shadow:0 1px 4px rgba(0,0,0,.08); }
-  .row  { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .lbl  { font-size:12.5px; font-weight:600; color:var(--navy); }
-  .hint { font-size:10.5px; color:#7a8494; margin-top:2px; }
-  /* toggle switch */
-  .switch { position:relative; width:52px; height:28px; flex:0 0 auto; }
+  header p { font-size:10px; opacity:.85; margin-top:2px; }
+  .card { background:#fff; margin:8px 10px; border-radius:10px; padding:11px 13px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .lbl { font-size:12px; font-weight:700; color:var(--navy); }
+  .hint { font-size:10px; color:#7a8494; margin-top:2px; }
+  .switch { position:relative; width:48px; height:26px; flex:0 0 auto; }
   .switch input { opacity:0; width:0; height:0; }
-  .slider { position:absolute; inset:0; background:#c3ccd8; border-radius:28px; cursor:pointer; transition:.25s; }
-  .slider::before { content:""; position:absolute; height:22px; width:22px; right:3px; top:3px;
-                    background:#fff; border-radius:50%; transition:.25s; }
-  input:checked + .slider { background:#27ae60; }
-  input:checked + .slider::before { transform:translateX(-24px); }
-  /* inputs */
-  input[type=password], input[type=text] {
-    width:100%; padding:7px 9px; margin-top:5px; border:1px solid #d5dde6;
-    border-radius:7px; font-size:12px; direction:ltr; text-align:left;
+  .slider { position:absolute; inset:0; background:#c3ccd8; border-radius:26px; cursor:pointer; transition:.25s; }
+  .slider::before { content:""; position:absolute; height:20px; width:20px; right:3px; top:3px; background:#fff; border-radius:50%; transition:.25s; }
+  input:checked + .slider { background:var(--green); }
+  input:checked + .slider::before { transform:translateX(-22px); }
+  input[type=password], input[type=text], textarea, select {
+    width:100%; padding:6px 9px; margin-top:4px; border:1px solid #d5dde6; border-radius:7px;
+    font-size:11.5px; direction:ltr; text-align:left; background:#fff;
   }
-  button {
-    width:100%; margin-top:8px; padding:9px 10px; border:none; border-radius:8px;
-    background:var(--orange); color:#fff; font-weight:700; font-size:13px; cursor:pointer;
-  }
-  button.secondary { background:var(--navy); }
+  textarea { direction:rtl; text-align:right; height:56px; resize:vertical; }
+  button { width:100%; margin-top:6px; padding:8px; border:none; border-radius:8px; background:var(--orange); color:#fff; font-weight:700; font-size:12px; cursor:pointer; }
+  button.sec { background:var(--navy); }
+  button.ghost { background:#e6ebf1; color:var(--navy); }
   button:hover { filter:brightness(1.07); }
-  #status { font-size:11px; margin-top:8px; color:var(--navy); min-height:15px; font-weight:600; }
-  .file-label { display:block; font-size:11px; margin-top:6px; color:#4a5568; }
-  a { color:var(--navy); font-size:10.5px; }
+  #status { font-size:11px; margin-top:6px; color:var(--navy); min-height:15px; font-weight:600; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  #out { font-size:10.5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:7px; padding:7px; margin-top:6px; max-height:110px; overflow-y:auto; white-space:pre-wrap; display:none; direction:ltr; text-align:left;}
+  .badge { background:var(--orange); color:#fff; font-size:9px; padding:2px 7px; border-radius:8px; }
+  .vaultrow { display:flex; gap:6px; } .vaultrow button { margin-top:4px; }
 </style>
 </head>
 <body>
   <header>
-    <h1>🤖 CvAgent <span style="font-size:10px;background:#E87722;padding:2px 7px;border-radius:9px;">v1.0</span></h1>
-    <p>Auto-Fill Job Applications — Workday &amp; more</p>
+    <h1>🤖 CvAgent <span class="badge">AI Career OS v3.0</span></h1>
+    <p>30-feature suite — powered by Groq Llama</p>
   </header>
 
   <div class="card">
     <div class="row">
-      <div>
-        <div class="lbl">الوكيل شغال؟</div>
-        <div class="hint">لما تشغّله يظهر زرار برتقالي في الصفحة</div>
-      </div>
-      <label class="switch">
-        <input type="checkbox" id="onOff">
-        <span class="slider"></span>
-      </label>
+      <div><div class="lbl">الوكيل شغال؟</div><div class="hint">ON = حظر التتبع + الزرار البرتقالي في الصفحات</div></div>
+      <label class="switch"><input type="checkbox" id="onOff"><span class="slider"></span></label>
     </div>
   </div>
 
   <div class="card">
-    <div class="lbl">مفتاح Groq API</div>
-    <div class="hint">مجاني من console.groq.com/keys</div>
+    <div class="lbl">🔑 Groq API Key</div>
     <input type="password" id="apiKey" placeholder="gsk_...">
-  </div>
-
-  <div class="card">
-    <div class="lbl">ملف بياناتك profile.json</div>
-    <div class="hint">نفس ملف الوكيل — بيتخزن في المتصفح بس</div>
-    <input type="file" id="profileFile" accept=".json" class="file-label">
+    <div class="lbl" style="margin-top:8px;">📄 profile.json</div>
+    <input type="file" id="profileFile" accept=".json" style="font-size:10px;">
     <div id="profileName" class="hint"></div>
+    <div class="lbl" style="margin-top:8px;">🔒 الخزنة (تشفير AES-256 للبيانات الحساسة)</div>
+    <div class="hint">بعد التفعيل: ملف البروفايل مشفر بالكامل، ومفتاح فك التشفير يعيش في الذاكرة المؤقتة لحد قفل المتصفح</div>
+    <div class="vaultrow">
+      <input type="password" id="vaultPass" placeholder="Master password">
+    </div>
+    <div class="vaultrow">
+      <button id="vaultEnable" class="sec">تفعيل</button>
+      <button id="vaultUnlock" class="sec">فتح</button>
+      <button id="vaultDisable" class="ghost">إيقاف</button>
+    </div>
+    <div id="vaultStatus" class="hint"></div>
   </div>
 
   <div class="card">
-    <div class="row" style="margin-bottom:8px;">
-      <div>
-        <div class="lbl">شخصية الإجابات (Persona)</div>
-        <div class="hint">بتتحكم في نبرة الأسئلة المقالية</div>
-      </div>
-    </div>
-    <select id="persona" style="width:100%;padding:7px 9px;border:1px solid #d5dde6;border-radius:7px;font-size:12px;">
-      <option value="Balanced">⚖️ Balanced — متوازنة (افتراضي)</option>
-      <option value="Manager">👔 Manager — قيادة عمليات</option>
-      <option value="Technical">🔬 Technical — عمق فني</option>
-      <option value="Executive">📈 Executive — استراتيجي</option>
+    <div class="lbl">🧠 ذكاء الإجابات</div>
+    <select id="persona">
+      <option value="Balanced">⚖️ Balanced</option>
+      <option value="Manager">👔 Manager</option>
+      <option value="Technical">🔬 Technical</option>
+      <option value="Executive">📈 Executive</option>
     </select>
-    <div class="row" style="margin-top:10px;">
-      <div>
-        <div class="lbl">ضغط Next تلقائي</div>
-        <div class="hint">لو مقفول: انت بتدوس Next بنفسك (أأمن)</div>
-      </div>
-      <label class="switch">
-        <input type="checkbox" id="autoNext">
-        <span class="slider"></span>
-      </label>
+    <div class="row" style="margin-top:8px;">
+      <div><div class="lbl">Next تلقائي</div><div class="hint">افتراضياً: يدوي (أأمن)</div></div>
+      <label class="switch"><input type="checkbox" id="autoNext"><span class="slider"></span></label>
     </div>
+    <div class="row" style="margin-top:6px;">
+      <div><div class="lbl">إيميل alias خاص</div><div class="hint">name+company@gmail.com لكل تقديم</div></div>
+      <label class="switch"><input type="checkbox" id="aliasMode"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">🎯 أدوات صفحة الوظيفة (اقرأ JD من التاب المفتوح)</div>
+    <div class="grid2">
+      <button id="scoreJD" class="sec">📊 قيّم نسبة التوافق</button>
+      <button id="coverLetter" class="sec">✉️ خطاب تعريفي</button>
+      <button id="tailorCV" class="sec">🧬 CV مفصّل ATS</button>
+      <button id="interviewPrep" class="sec">🎙 تدريب مقابلة صوتي</button>
+    </div>
+    <div id="out"></div>
+    <button id="copyOut" class="ghost" style="display:none;">📋 نسخ</button>
+  </div>
+
+  <div class="card">
+    <div class="lbl">⚡ تقديم جماعي (URL في كل سطر)</div>
+    <textarea id="bulkUrls" placeholder="https://company1.wd3.myworkdayjobs.com/...
+https://company2.greenhouse.io/..."></textarea>
+    <button id="bulkRun">🚀 افتح واملأ كل التابات (تقدر تراجع كل واحدة)</button>
   </div>
 
   <div class="card">
     <div class="row">
-      <div>
-        <div class="lbl">📋 سجل التقديمات</div>
-        <div class="hint">بيتسجل تلقائياً لما توصل لصفحة Submit</div>
-      </div>
+      <div><div class="lbl">📋 سجل التقديمات</div><div class="hint">+ مواعيد متابعة 7 و14 يوم (ICS)</div></div>
       <span id="trackCount" class="lbl" style="background:var(--navy);color:#fff;padding:3px 10px;border-radius:12px;">0</span>
     </div>
-    <button id="exportCsv" class="secondary" style="margin-top:8px;">⬇️ تصدير CSV</button>
-    <button id="clearTracker" style="background:#95a3b3;margin-top:6px;">🗑 مسح السجل</button>
+    <div class="grid2">
+      <button id="exportCsv" class="ghost">⬇️ CSV</button>
+      <button id="followIcs" class="ghost">📅 مواعيد متابعة</button>
+    </div>
   </div>
 
   <div class="card">
-    <button id="fillNow">🚀 املأ الصفحة الحالية دلوقتي</button>
-    <div id="status"></div>
+    <div class="lbl">🌐 Swarm Blueprints (خرائط المواقع المتعلمة)</div>
+    <div class="grid2">
+      <button id="bpExport" class="ghost">⬆️ تصدير</button>
+      <button id="bpImport" class="ghost">⬇️ استيراد</button>
+    </div>
+    <input type="file" id="bpFile" accept=".json" style="display:none;">
   </div>
 
-  <div class="card" style="font-size:10.5px; color:#7a8494;">
-    ⚠️ الوكيل بيوقف قبل زرار Submit — راجع واضغط بنفسك.
-    <a href="https://github.com/engahmedabdoualyan-max/CvAgent" target="_blank">الريبو والتعليمات ↗</a>
+  <div class="card">
+    <div class="row">
+      <div><div class="lbl">🧨 مسح كل البيانات المحلية</div><div class="hint">مفاتيح + بروفايل + سجلات — نهائي</div></div>
+      <button id="wipeAll" style="background:#c0392b;width:auto;margin:0;padding:6px 12px;">مسح</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <button id="fillNow">🚀 املأ الصفحة الحالية</button>
+    <div id="status"></div>
   </div>
 
   <script src="popup.js"></script>

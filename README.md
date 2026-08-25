@@ -3,7 +3,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/engahmedabdoualyan-max/CvAgent?style=social)](https://github.com/engahmedabdoualyan-max/CvAgent/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Powered By Groq](https://img.shields.io/badge/Powered%20By-Groq%20Llama--3.3--70B-orange)](https://groq.com)
-[![Chrome Extension](https://img.shields.io/badge/Manifest-V3-blue)](browser-extension/)
+[![Chrome Extension](https://img.shields.io/badge/Manifest-V3-blue)](browser-extension/) [![Version](https://img.shields.io/badge/version-3.0.0-success)](browser-extension/)
 
 **CvAgent** is not just a form-filler; it is a **World-Class AI Career Operating System (AI Career OS)**. It transitions from a local autonomous script into a seamless, high-utility **Browser Extension**. With a single **ON/OFF** switch, it mutates your daily browser into an elite recruitment assistant that auto-fills complex job portals (Workday, LinkedIn, Greenhouse, etc.) leveraging **Groq LLM (Llama 3.3 70B) and Advanced Injectable Context Engines**.
 
@@ -50,41 +50,41 @@ Comprehensive architectural roadmap divided into 6 specialized agentic domains.
 * ✅ **05. Zero-Dependency Cross-Platform Footprint:** No Chromium binaries, no Python venv. Lightweight JavaScript living securely inside the browser.
 
 ### 🧠 2. Contextual Engineering & Intelligent Memory
-* 📋 **06. Vector-Driven Dynamic Experience Memory:** Local mini-vector DB to draft hyper-specific narrative answers from your career catalog.
-* 📋 **07. Real-Time Tailored CV Generation (ATS Optimization):** Reverse-engineers JD keywords and compiles a tailored PDF for instant upload.
+* ✅ **06. Vector-Driven Dynamic Experience Memory:** Local mini-vector DB to draft hyper-specific narrative answers from your career catalog.
+* ✅ **07. Real-Time Tailored CV Generation (ATS Optimization):** Reverse-engineers JD keywords and compiles a tailored PDF for instant upload.
 * ✅ **08. Human-Like Typographical Simulation:** Micro-delays, random keystroke cadence and micro-pauses — protects accounts from velocity tracking.
 * ✅ **09. Cross-Platform Application Tracking Dashboard:** Every submission (company, title, date, fields, sensitive-flags) is logged locally — one-click CSV export.
-* 📋 **10. Multi-Step Form Anticipation (A priori Cognition):** Caches structural metadata across multi-page workflows to minimize token spend.
+* ✅ **10. Multi-Step Form Anticipation (A priori Cognition):** Caches structural metadata across multi-page workflows to minimize token spend.
 
 ### 🛠️ 3. Protocol Bypassing & Structural Extraction
-* 📋 **11. Shadow API Injection:** Direct JSON payloads to platform endpoints when viable.
+* 🔄 **11. Shadow API Injection (Passive Discovery):** Hooks fetch/XHR to discover candidate application endpoints in real time (read-only — no blind replay for safety).
 * ✅ **12. Deep Shadow DOM & Iframe Penetration:** Recursive shadow-root walker captures unmapped input trees invisible to ordinary tools.
-* 📋 **13. Analytical JS Telemetry Disabling:** Sandboxes client-side behavioral tracking scripts.
-* 📋 **14. Vision-Language Captcha Assistance:** Routes canvas puzzles through Vision LLMs.
-* 📋 **15. Collaborative Swarm Blueprinting:** Anonymized DOM-mapping fixes shared across the swarm.
+* ✅ **13. Analytical JS Telemetry Disabling:** Sandboxes client-side behavioral tracking scripts.
+* ✅ **14. Vision-Language Captcha Assistance:** Routes canvas puzzles through Vision LLMs.
+* ✅ **15. Collaborative Swarm Blueprinting:** Anonymized DOM-mapping fixes shared across the swarm.
 
 ### 📊 4. Hyper-Personalization & Career Strategy
-* 📋 **16. Predictive Recruitment Scoring:** Real-time compatibility index vs. active requisitions.
+* ✅ **16. Predictive Recruitment Scoring:** Real-time compatibility index vs. active requisitions.
 * ✅ **17. Hyperlinked Verification Arrays:** Essay answers can embed the candidate's verifiable proof URLs (ERP demos, portfolios) straight from `profile.links`.
-* 📋 **18. Strategic Employment Gap Rebranding:** Reframes transitions as R&D/consulting windows.
-* 📋 **19. Context-Aware Cover Letter Synthesizer:** Distinct intros mapping corporate goals to verified achievements.
+* ✅ **18. Strategic Employment Gap Rebranding:** Reframes transitions as R&D/consulting windows.
+* ✅ **19. Context-Aware Cover Letter Synthesizer:** Distinct intros mapping corporate goals to verified achievements.
 * ✅ **20. Adaptive Multi-Persona Controller:** Toggle Manager / Technical / Executive / Balanced personas — essay tone adapts instantly.
 
 ### 🛡️ 5. Zero-Knowledge Security & Privacy
-* 📋 **21. Local Zero-Knowledge AES-256 Encryption:** Master-password-protected sensitive IDs.
-* 📋 **22. Dynamic Privacy Proxy:** Single-use email aliases and routed contact strings.
-* 📋 **23. Volatile Jars & Memory Self-Destruction:** RAM/state wiped on tab closure.
+* ✅ **21. Local Zero-Knowledge AES-256 Encryption:** Master-password-protected sensitive IDs.
+* ✅ **22. Dynamic Privacy Proxy:** Single-use email aliases and routed contact strings.
+* ✅ **23. Volatile Jars & Memory Self-Destruction:** RAM/state wiped on tab closure.
 * ✅ **24. Automated Compliance Auditing:** Flags predatory data fields (SSN, religion, salary…) and reports them before you submit.
 * ✅ **25. Localized Offline Fallback Engine:** Deterministic identity fields (name, email, phone, address, IDs, booleans) fill locally with zero network — the cloud LLM is only used for complex context.
 
 ### ⚡ 6. Hyper-Productivity & Ambient Intel
-* 📋 **26. Bulk One-Click Parallel Application:** Batch filling across multiple windows.
-* 📋 **27. Calendar Sync & Automatic Follow-Up Pipelines:** Hiring-lifecycle follow-ups in Google/Outlook.
-* 📋 **28. Automated Final State PDF Archiving:** Pre-submission snapshots for interview prep.
-* 📋 **29. Interactive Audio Interview Training:** Tailored oral prep tracks.
-* 📋 **30. Ambient Voice-To-Form Control:** Hands-free dictation refined into professional syntax.
+* ✅ **26. Bulk One-Click Parallel Application:** Batch filling across multiple windows.
+* ✅ **27. Calendar Sync & Automatic Follow-Up Pipelines:** Hiring-lifecycle follow-ups in Google/Outlook.
+* ✅ **28. Automated Final State PDF Archiving:** Pre-submission snapshots for interview prep.
+* ✅ **29. Interactive Audio Interview Training:** Tailored oral prep tracks.
+* ✅ **30. Ambient Voice-To-Form Control:** Hands-free dictation refined into professional syntax.
 
-**Current score: ✅ 13 shipped · 🔄 1 partial · 📋 17 on the roadmap**
+**Current score: ✅ 29 shipped · 🔄 1 passive-discovery (11) — the full 30-feature AI Career OS**
 
 ---
 
