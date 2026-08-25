@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root { --navy:#1F3A5F; --orange:#E87722; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Arial,sans-serif; }
+  body { width:320px; background:#f4f6f9; color:#2E3440; }
+  header { background:linear-gradient(90deg,var(--navy),#16304F); color:#fff; padding:14px 16px; }
+  header h1 { font-size:15px; display:flex; align-items:center; gap:8px; }
+  header p  { font-size:10.5px; opacity:.85; margin-top:3px; }
+  .card { background:#fff; margin:10px 12px; border-radius:10px; padding:12px 14px;
+          box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .row  { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .lbl  { font-size:12.5px; font-weight:600; color:var(--navy); }
+  .hint { font-size:10.5px; color:#7a8494; margin-top:2px; }
+  /* toggle switch */
+  .switch { position:relative; width:52px; height:28px; flex:0 0 auto; }
+  .switch input { opacity:0; width:0; height:0; }
+  .slider { position:absolute; inset:0; background:#c3ccd8; border-radius:28px; cursor:pointer; transition:.25s; }
+  .slider::before { content:""; position:absolute; height:22px; width:22px; right:3px; top:3px;
+                    background:#fff; border-radius:50%; transition:.25s; }
+  input:checked + .slider { background:#27ae60; }
+  input:checked + .slider::before { transform:translateX(-24px); }
+  /* inputs */
+  input[type=password], input[type=text] {
+    width:100%; padding:7px 9px; margin-top:5px; border:1px solid #d5dde6;
+    border-radius:7px; font-size:12px; direction:ltr; text-align:left;
+  }
+  button {
+    width:100%; margin-top:8px; padding:9px 10px; border:none; border-radius:8px;
+    background:var(--orange); color:#fff; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  button.secondary { background:var(--navy); }
+  button:hover { filter:brightness(1.07); }
+  #status { font-size:11px; margin-top:8px; color:var(--navy); min-height:15px; font-weight:600; }
+  .file-label { display:block; font-size:11px; margin-top:6px; color:#4a5568; }
+  a { color:var(--navy); font-size:10.5px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🤖 CvAgent <span style="font-size:10px;background:#E87722;padding:2px 7px;border-radius:9px;">v1.0</span></h1>
+    <p>Auto-Fill Job Applications — Workday &amp; more</p>
+  </header>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="lbl">الوكيل شغال؟</div>
+        <div class="hint">لما تشغّله يظهر زرار برتقالي في الصفحة</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="onOff">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">مفتاح Groq API</div>
+    <div class="hint">مجاني من console.groq.com/keys</div>
+    <input type="password" id="apiKey" placeholder="gsk_...">
+  </div>
+
+  <div class="card">
+    <div class="lbl">ملف بياناتك profile.json</div>
+    <div class="hint">نفس ملف الوكيل — بيتخزن في المتصفح بس</div>
+    <input type="file" id="profileFile" accept=".json" class="file-label">
+    <div id="profileName" class="hint"></div>
+  </div>
+
+  <div class="card">
+    <button id="fillNow">🚀 املأ الصفحة الحالية دلوقتي</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="card" style="font-size:10.5px; color:#7a8494;">
+    ⚠️ الوكيل بيوقف قبل زرار Submit — راجع واضغط بنفسك.
+    <a href="https://github.com/engahmedabdoualyan-max/CvAgent" target="_blank">الريبو والتعليمات ↗</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

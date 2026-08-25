@@ -4,10 +4,11 @@
 > Ready-Mix Concrete Plants & Crushers Manager | M.Sc. Engineering Economics | PhD Candidate (AI-Driven Management)
 > 📍 Dammam, Saudi Arabia — 📧 ahmed.abdoualyan@gmail.com — 📱 +966 50 043 9617
 
-This repository contains two things:
+This repository contains three things:
 
 1. **[`cv/`](cv/)** — my complete professional CV package (Arabic + English), designed to target **Ready-Mix Concrete Plants & Crushers Management** roles.
 2. **[`job-agent/`](job-agent/)** — a Python AI agent that **auto-fills Workday job application forms** using Playwright + Groq LLM, driven by a structured `profile.json`.
+3. **[`browser-extension/`](browser-extension/)** — 🧩 **NEW:** the same agent as a **Chrome/Edge extension** with an ON/OFF button that lives inside *your* browser — click the floating orange pill on any application page and watch it fill text fields, dropdowns, radios, screening questions and calendar pickers in real time.
 
 ---
 

@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "CvAgent — Auto-Fill Job Applications",
+  "version": "1.0.0",
+  "description": "ON/OFF AI agent that fills job application forms (Workday & others) with your profile via Groq LLM. Controls text fields, dropdowns, radios, checkboxes, calendars and Next buttons.",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["https://api.groq.com/*", "<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CvAgent — ON/OFF"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "128": "icon.png"
+  }
+}
