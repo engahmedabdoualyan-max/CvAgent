@@ -164,6 +164,46 @@ function extractFields() {
 const fieldByIndex = (i) => deepQueryAll(`[data-cvagent-idx="${i}"]`)[0];
 
 // ===========================================================================
+// CUSTOM DROPDOWN ENGINE — robust against:
+//   * slow-rendering popups (polls up to ~2.5s instead of a fixed 500ms wait)
+//   * type-to-filter comboboxes (types the value, then searches the list)
+//   * slight text differences (exact -> startsWith -> contains matching)
+//   * two full attempts before giving up
+// ===========================================================================
+function findOption(value) {
+  const v = value.toLowerCase().trim();
+  const vis = (list) => list.filter((o) => isVisible(o) && o.innerText.trim());
+  const opts = vis(deepQueryAll('[role="option"]'));
+  return opts.find((o) => o.innerText.trim().toLowerCase() === v)
+      || opts.find((o) => o.innerText.trim().toLowerCase().startsWith(v))
+      || vis(deepQueryAll('[role="listbox"] li')).find((o) => o.innerText.trim().toLowerCase().includes(v))
+      || vis(deepQueryAll("ul li")).find((o) => o.innerText.trim().toLowerCase() === v)
+      || null;
+}
+
+async function customPick(el, value) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try { el.click(); } catch (e) { /* some need focus first */ }
+    for (let i = 0; i < 10; i++) {                    // poll ~2.5s for popup
+      await sleep(250);
+      const opt = findOption(value);
+      if (opt) { opt.click(); await sleep(250); return true; }
+    }
+    // type-to-search combobox: type the value then look again
+    try {
+      el.focus();
+      setNativeValue(el, value);
+    } catch (e) { /* ignore */ }
+    await sleep(650);
+    const opt = findOption(value);
+    if (opt) { opt.click(); await sleep(250); return true; }
+  }
+  document.activeElement && document.activeElement.blur();
+  await sleep(200);
+  return false;
+}
+
+// ===========================================================================
 // FEATURE 04 — captcha / OTP barrier detection
 // ===========================================================================
 function detectSecurityBarrier() {
@@ -278,24 +318,20 @@ async function dispatch(act, siteDomain, aliasMode) {
     await humanType(el, value);
     return el.value === value;
   }
-  if (kind === "select") {
+  if (kind === "select") {                       // native <select>
+    const want = value.toLowerCase();
     let done = false;
     for (const opt of el.options) {
-      if (opt.text.trim() === value) { el.value = opt.value; done = true; break; }
+      const t = opt.text.trim().toLowerCase();
+      if (!t) continue;
+      if (t === want || t.includes(want) || want.includes(t)) { el.value = opt.value; done = true; break; }
     }
     if (!done) { el.value = value; done = true; }
     el.dispatchEvent(new Event("change", { bubbles: true }));
     return done;
   }
-  if (kind === "pick") {
-    el.click();
-    await sleep(500);
-    let opt = deepQueryAll('[role="option"]').filter(isVisible).find((o) => o.innerText.trim() === value);
-    if (!opt) opt = deepQueryAll('[role="option"]').filter(isVisible).find((o) => o.innerText.trim().startsWith(value));
-    if (!opt) opt = deepQueryAll('[role="listbox"] li').filter(isVisible).find((o) => o.innerText.trim().includes(value));
-    if (opt) { opt.click(); await sleep(250); return true; }
-    document.activeElement && document.activeElement.blur();
-    return false;
+  if (kind === "pick") {                          // custom dropdown (Workday etc.)
+    return await customPick(el, value);
   }
   if (kind === "check" || kind === "uncheck") {
     const want = kind === "check";
