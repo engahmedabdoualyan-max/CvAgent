@@ -55,6 +55,9 @@ LLM returns strict JSON: {"actions":[{"index":3,"action":"fill","value":"..."}]}
         ↓
 execute: fill / select / custom Workday dropdown / checkbox — with retries
         ↓
+screening questionnaires: LLM reads the QUESTION text (fieldset legend /
+ARIA group labels) and answers truthfully from profile.booleans
+        ↓
 auto-click "Next" through pages → STOP at final review (you press Submit)
 ```
 

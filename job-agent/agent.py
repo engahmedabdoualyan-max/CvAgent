@@ -87,7 +87,7 @@ window.navigator.permissions.query = (p) =>
 #   * tags each survivor with a unique  data-agent-idx  attribute so Python
 #     can always rebuild a rock-solid CSS selector for it,
 #   * collects every attribute the LLM might need to understand the field.
-EXTRACT_JS = """
+EXTRACT_JS = r"""
 () => {
     const nodes = document.querySelectorAll('input, textarea, select');
     const out = [];
@@ -109,6 +109,56 @@ EXTRACT_JS = """
             const lbl = document.querySelector(`label[for="${el.id}"]`);
             if (lbl) labelText = lbl.innerText.trim();
         }
+
+        // ---- QUESTION CONTEXT (for screening questionnaires) --------------
+        // Radio groups / checkbox groups show "Yes"/"No" as their own labels,
+        // so the actual QUESTION text lives above them. Resolution order:
+        //   1. <fieldset><legend>       (classic HTML question groups)
+        //   2. aria-labelledby target    (ARIA question groups)
+        //   3. role=group/radiogroup aria-label
+        //   4. nearest heading (h1-h6) inside the question container
+        let questionContext = '';
+        try {
+            const fs = el.closest('fieldset');
+            const legend = fs && fs.querySelector('legend');
+            if (legend && legend.innerText.trim()) {
+                questionContext = legend.innerText.trim();
+            }
+            if (!questionContext && el.getAttribute('aria-labelledby')) {
+                questionContext = el.getAttribute('aria-labelledby')
+                    .split(/\s+/).map(id => {
+                        const t = document.getElementById(id);
+                        return t ? t.innerText.trim() : '';
+                    }).filter(Boolean).join(' ');
+            }
+            if (!questionContext) {
+                const grp = el.closest('[role="radiogroup"],[role="group"],[role="listbox"]');
+                if (grp) {
+                    questionContext = grp.getAttribute('aria-label') ||
+                                      grp.getAttribute('aria-description') || '';
+                    if (!questionContext) {
+                        const h = grp.querySelector('h1,h2,h3,h4,h5,h6,[data-automation-id="promptLabel"],[data-automation-id*="question"]');
+                        if (h) questionContext = h.innerText.trim();
+                    }
+                }
+            }
+            if (!questionContext) {
+                // walk up max 3 ancestors, look backwards for a heading/label text
+                let node = el;
+                for (let up = 0; up < 3 && node; up++) {
+                    node = node.parentElement;
+                    if (!node) break;
+                    let prev = node.previousElementSibling;
+                    for (let back = 0; back < 4 && prev; back++) {
+                        const t = (prev.innerText || '').trim();
+                        if (t && t.length > 8 && t.length < 400) { questionContext = t; break; }
+                        prev = prev.previousElementSibling;
+                    }
+                    if (questionContext) break;
+                }
+            }
+        } catch (e) { /* context is best-effort only */ }
+        questionContext = questionContext.slice(0, 300);
 
         // ---- dropdown options (native <select> only) -----------------------
         let options = [];
@@ -132,6 +182,7 @@ EXTRACT_JS = """
             ariaLabel:     el.getAttribute('aria-label') || '',
             automationId:  el.getAttribute('data-automation-id') || '',
             label:         labelText,
+            question:      questionContext,
             value:         (el.value || '').slice(0, 80),
             readOnly:      el.readOnly || false,
             required:      el.required || el.getAttribute('aria-required') === 'true',
@@ -167,6 +218,23 @@ Allowed actions:
   "uncheck"  -> untick a checkbox (value ignored).
   "click"    -> for radio inputs: click THIS radio when its label matches the profile answer.
   "skip"     -> leave untouched (captcha, photo upload, signature, already filled, irrelevant).
+
+SCREENING QUESTIONS & QUESTIONNAIRES:
+  * Each field carries a "question" key = the text of the screening question
+    it belongs to (e.g. "Are you legally authorized to work in Saudi Arabia?").
+  * For Yes/No or multiple-choice screening questions, answer TRUTHFULLY
+    according to profile.booleans and profile facts:
+      - work authorization / residency          -> true (he holds a valid KSA iqama)
+      - years of experience questions           -> he meets any threshold up to 20
+      - willing to relocate / travel / shift    -> true
+      - education questions                     -> Bachelor + Master's + PhD (in progress)
+      - salary expectations                     -> prefer "negotiable" if offered as choice
+  * NEVER lie on knockout questions. If a requirement is clearly NOT in the
+    profile (e.g. "Are you a Saudi national?"), answer truthfully or skip.
+  * For open essay/text questions ("Why do you want to work here?", "Describe
+    your experience..."), use "fill" and write 2-4 professional sentences in
+    the SAME LANGUAGE as the question, built from profile.summary and his
+    concrete-plants leadership record.
 
 Hard rules:
   * NEVER invent data that is not derivable from the profile. If unsure -> "skip".
@@ -567,9 +635,17 @@ async def selftest() -> None:
       <input id="em" type="email" placeholder="Email address"/>
       <select id="co"><option>Choose</option><option>Egypt</option><option>Saudi Arabia</option></select>
       <label for="cb">I agree</label><input id="cb" type="checkbox"/>
-      <input type="radio" name="r" id="r1"/><label for="r1">Yes</label>
-      <input type="radio" name="r" id="r2"/><label for="r2">No</label>
       <textarea id="ms" placeholder="Message"></textarea>
+      <fieldset>
+        <legend>Are you legally authorized to work in Saudi Arabia?</legend>
+        <input type="radio" name="auth" id="a1"/><label for="a1">Yes</label>
+        <input type="radio" name="auth" id="a2"/><label for="a2">No</label>
+      </fieldset>
+      <div role="radiogroup" aria-label="How many years of plant management experience do you have?">
+        <input type="radio" name="yrs" id="y1"/><label for="y1">Less than 5</label>
+        <input type="radio" name="yrs" id="y2"/><label for="y2">5 - 10</label>
+        <input type="radio" name="yrs" id="y3"/><label for="y3">More than 10</label>
+      </div>
       <button>Next</button>
     </body></html>"""
     async with async_playwright() as pw:
@@ -582,6 +658,14 @@ async def selftest() -> None:
         print(json.dumps(fields, indent=2, ensure_ascii=False))
         wd = await page.evaluate("() => navigator.webdriver")
         log(f"navigator.webdriver after stealth = {wd}  (must be undefined/False)")
+        # verify question-context extraction for screening radios
+        q1 = next((f.get("question", "") for f in fields if f["id"] == "a1"), "")
+        q2 = next((f.get("question", "") for f in fields if f["id"] == "y3"), "")
+        assert "authorized" in q1.lower(), f"fieldset legend NOT captured: '{q1}'"
+        assert "years" in q2.lower(), f"radiogroup label NOT captured: '{q2}'"
+        log(f"Screening Q1 captured: '{q1[:60]}...'")
+        log(f"Screening Q2 captured: '{q2[:60]}...'")
+        log("QUESTION-CONTEXT EXTRACTION OK ✔")
         await asyncio.sleep(3)
         await browser.close()
     log("SELFTEST DONE ✔")
