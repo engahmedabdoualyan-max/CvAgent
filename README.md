@@ -16,6 +16,7 @@ Built and maintained by **Eng. Ahmed Mohamed Abdo Elsayed Alyan** — Ready-Mix 
 | Path | What it is |
 |---|---|
 | **[`browser-extension/`](browser-extension/)** | 🧩 The ON/OFF Chrome/Edge extension — the primary product |
+| **[`firefox-extension/`](firefox-extension/)** | 🦊 Firefox build (same agent, Gecko-compatible manifest) |
 | **[`job-agent/`](job-agent/)** | CLI version — Playwright (async) + Groq, same brain |
 | **[`cv/`](cv/)** | Complete bilingual CV package (PDF / DOCX / HTML / 300-DPI images) |
 

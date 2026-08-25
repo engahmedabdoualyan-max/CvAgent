@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CvAgent — Interview Audio Training</title>
+<style>
+  :root { --navy:#1F3A5F; --orange:#E87722; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Arial,sans-serif; }
+  body { background:#f4f6f9; padding:24px; }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { color:var(--navy); font-size:22px; margin-bottom:4px; }
+  .sub { color:#7a8494; font-size:13px; margin-bottom:18px; }
+  .controls { display:flex; gap:10px; margin-bottom:18px; }
+  button { padding:10px 18px; border:none; border-radius:9px; background:var(--orange); color:#fff; font-weight:700; font-size:13px; cursor:pointer; }
+  button.sec { background:var(--navy); }
+  button.stop { background:#c0392b; }
+  .qa { background:#fff; border-radius:12px; padding:16px 18px; margin-bottom:12px; box-shadow:0 1px 5px rgba(0,0,0,.07); border-right:4px solid var(--orange); }
+  .q { font-weight:800; color:var(--navy); font-size:14px; margin-bottom:8px; display:flex; justify-content:space-between; gap:10px; align-items:center; }
+  .a { font-size:13px; line-height:1.65; color:#3b4252; }
+  .play { background:var(--green,#27ae60); border-radius:20px; padding:5px 13px; font-size:11px; flex:0 0 auto; }
+  .empty { text-align:center; color:#7a8494; padding:40px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎙 CvAgent — Interview Audio Training</h1>
+  <div class="sub">اسمع أسئلة المقابلة وإجاباتها بصوت عالي — مولدة من بياناتك الحقيقية. شغلها في العربية أو الإنجليزية قبل المقابلة.</div>
+  <div class="controls">
+    <button id="playAll">▶️ شغّل الكل</button>
+    <button id="stopAll" class="stop">⏹ إيقاف</button>
+    <button id="dl" class="sec">⬇️ تحميل نصي</button>
+  </div>
+  <div id="list"><div class="empty">No Q&A generated yet — open the CvAgent popup and press "🎙 تدريب مقابلة صوتي".</div></div>
+</div>
+<script src="interview.js"></script>
+</body>
+</html>
