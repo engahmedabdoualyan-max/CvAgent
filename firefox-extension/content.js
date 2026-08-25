@@ -479,8 +479,11 @@ async function runAgent() {
         }
       }).catch(() => {});
       addSnapshotButton();
-      setStatus("✅ DONE — review, 📸 snapshot, then Submit yourself 🎉", false);
-      alert("CvAgent: الصفحة اتملى ✅\nراجع بياناتك واضغط Submit بنفسك.");
+      setStatus(`✅ DONE — ${ok} filled${flagged.length ? ` · ⚠ ${flagged.length} sensitive` : ""} — review & Submit yourself 🎉`, false);
+      alert("CvAgent: الصفحة اتملى ✅\n"
+        + `اتملأ ${ok} خانة\n`
+        + (flagged.length ? `⚠ انتبه: ${flagged.length} خانة حساسة (${flagged.slice(0, 3).map((f) => f.label || f.name).join(", ")})\n` : "")
+        + "راجع بياناتك واضغط Submit بنفسك.");
       return;
     }
     if (st.autoNext && clickNext()) setStatus("clicked Next — press me again 🤖", false);
@@ -563,6 +566,39 @@ async function applyState() {
   if (st.agentOn) ensurePill(); else { removePill(); hideMic(); }
 }
 
+// ===========================================================================
+// ZERO-EFFORT MODE — auto-fill the moment an application form is detected
+// (only when ON + autoRun enabled; runs once per page; conservative checks
+// so it never fires on random websites)
+// ===========================================================================
+async function maybeAutoRun() {
+  try {
+    const st = await chrome.storage.local.get(["agentOn", "autoRun"]);
+    if (!st.agentOn || !st.autoRun) return;
+    if (sessionStorage.getItem("cvagentAutoran")) return;
+    if (RUNNING) return;
+
+    const fields = extractFields();
+    if (fields.length < 3) return;                       // too small to be an application
+
+    const textish = fields.filter((f) =>
+      f.tag === "textarea" || ["text", "email", "tel", "url", ""].includes(f.type)).length;
+    if (textish < 2) return;                             // mostly checkboxes/radios only
+
+    const identity = fields.some((f) =>
+      /name|email|phone|mobile|first|last|city|country/i.test(
+        [f.label, f.name, f.id, f.placeholder, f.ariaLabel].join(" ")));
+    const jobUrl = /apply|job|career|candidate|application|workday|myworkday|greenhouse|lever|taleo|bamboohr|recruit|وظائف|توظيف|تقديم/i
+      .test(location.href + " " + document.title);
+
+    if (!identity && !jobUrl) return;                    // random site — hands off
+
+    sessionStorage.setItem("cvagentAutoran", "1");
+    setStatus("auto-detected application — filling...", true);
+    setTimeout(() => runAgent(), 1200);
+  } catch (e) { /* never break the page */ }
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "STATE") applyState();
   if (msg.type === "RUN_NOW") runAgent();
@@ -574,3 +610,4 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 applyState();
+maybeAutoRun();

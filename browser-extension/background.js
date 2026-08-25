@@ -247,6 +247,39 @@ function tailoredCVHtml(profile, tailor) {
 }
 
 // ===========================================================================
+// Zero-effort triggers: keyboard shortcut (Alt+Shift+F) + right-click menu
+// ===========================================================================
+async function runInTab(tabId) {
+  try {
+    await chrome.tabs.sendMessage(tabId, { type: "RUN_NOW" });
+  } catch (e) {
+    try {
+      await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+      await chrome.tabs.sendMessage(tabId, { type: "RUN_NOW" });
+    } catch (e2) { /* restricted page */ }
+  }
+}
+
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === "fill-page") {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.id) runInTab(tab.id);
+  }
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "cvagent-fill",
+    title: "🤖 CvAgent: Fill this page",
+    contexts: ["page", "editable"]
+  });
+});
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === "cvagent-fill" && tab && tab.id) runInTab(tab.id);
+});
+
+// ===========================================================================
 // Message router
 // ===========================================================================
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {

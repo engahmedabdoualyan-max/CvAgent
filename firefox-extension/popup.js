@@ -127,11 +127,12 @@ async function refreshSteps() {
 // restore + wire everything
 // ===========================================================================
 document.addEventListener("DOMContentLoaded", async () => {
-  const st = await chrome.storage.local.get(["agentOn", "apiKey", "profileName", "persona", "autoNext", "aliasMode", "tracker"]);
+  const st = await chrome.storage.local.get(["agentOn", "apiKey", "profileName", "persona", "autoNext", "autoRun", "aliasMode", "tracker"]);
   $("onOff").checked = !!st.agentOn;
   $("apiKey").value = st.apiKey || "";
   $("persona").value = st.persona || "Balanced";
   $("autoNext").checked = !!st.autoNext;
+  $("autoRun").checked = !!st.autoRun;
   $("aliasMode").checked = !!st.aliasMode;
   $("trackCount").textContent = (st.tracker || []).length;
   refreshSteps();
@@ -192,6 +193,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   $("copyOut").addEventListener("click", async () => { await navigator.clipboard.writeText(lastOutText); setStatus("اتنسخ ✔"); });
   $("persona").addEventListener("change", async (e) => { await chrome.storage.local.set({ persona: e.target.value }); setStatus("Persona: " + e.target.value); });
+
+  // zero-effort switches
+  $("autoRun").addEventListener("change", async (e) => {
+    await chrome.storage.local.set({ autoRun: e.target.checked });
+    setStatus(e.target.checked
+      ? "⚡ Zero-Click ON — افتح صفحة التقديم وهي تتملأ لوحدها"
+      : "Zero-Click OFF — دوس الزرار البرتقالي بنفسك");
+  });
+  $("autoNext").addEventListener("change", async (e) => {
+    await chrome.storage.local.set({ autoNext: e.target.checked });
+    setStatus(e.target.checked ? "Next تلقائي ON" : "Next يدوي (أأمن)");
+  });
 
   // bulk
   $("bulkRun").addEventListener("click", async () => {
