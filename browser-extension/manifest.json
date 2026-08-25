@@ -12,6 +12,10 @@
     "default_popup": "popup.html",
     "default_title": "CvAgent — AI Career OS"
   },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

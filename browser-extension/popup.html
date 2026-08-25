@@ -23,7 +23,7 @@
     width:100%; padding:6px 9px; margin-top:4px; border:1px solid #d5dde6; border-radius:7px;
     font-size:11.5px; direction:ltr; text-align:left; background:#fff;
   }
-  textarea { direction:rtl; text-align:right; height:56px; resize:vertical; }
+  textarea { direction:rtl; text-align:right; resize:vertical; }
   button { width:100%; margin-top:6px; padding:8px; border:none; border-radius:8px; background:var(--orange); color:#fff; font-weight:700; font-size:12px; cursor:pointer; }
   button.sec { background:var(--navy); }
   button.ghost { background:#e6ebf1; color:var(--navy); }
@@ -33,109 +33,165 @@
   #out { font-size:10.5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:7px; padding:7px; margin-top:6px; max-height:110px; overflow-y:auto; white-space:pre-wrap; display:none; direction:ltr; text-align:left;}
   .badge { background:var(--orange); color:#fff; font-size:9px; padding:2px 7px; border-radius:8px; }
   .vaultrow { display:flex; gap:6px; } .vaultrow button { margin-top:4px; }
+
+  /* ---- simplified onboarding steps ---- */
+  .step { display:flex; gap:10px; align-items:flex-start; padding:8px 0; }
+  .step + .step { border-top:1px dashed #e4e9f0; }
+  .num { flex:0 0 24px; height:24px; border-radius:50%; background:var(--navy); color:#fff;
+         font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .num.done { background:var(--green); }
+  .step .body { flex:1; min-width:0; }
+  .step .t { font-size:12.5px; font-weight:700; color:var(--navy); }
+  .step .ok { color:var(--green); font-size:11px; font-weight:800; }
+
+  /* ---- drop zone ---- */
+  #dropZone { margin-top:6px; border:2px dashed #b8c4d2; border-radius:10px; padding:14px 10px;
+              text-align:center; cursor:pointer; transition:.15s; background:#fafbfd; }
+  #dropZone:hover { border-color:var(--orange); }
+  #dropZone.drag { border-color:var(--orange); background:#fff4ec; transform:scale(1.02); }
+  #dropZone .ico { font-size:20px; }
+  #dropZone .t { font-size:11.5px; font-weight:700; color:var(--navy); margin-top:3px; }
+
+  details { background:#fff; margin:8px 10px; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  summary { padding:11px 13px; font-size:12.5px; font-weight:700; color:var(--navy); cursor:pointer;
+            list-style:none; display:flex; align-items:center; gap:8px; }
+  summary::-webkit-details-marker { display:none; }
+  summary::after { content:"▾"; margin-right:auto; color:#93a1b0; transition:.2s; }
+  details[open] summary::after { transform:rotate(180deg); }
+  details .inner { padding:0 13px 11px; }
 </style>
 </head>
 <body>
   <header>
-    <h1>🤖 CvAgent <span class="badge">AI Career OS v3.0</span></h1>
-    <p>30-feature suite — powered by Groq Llama</p>
+    <h1>🤖 CvAgent <span class="badge">AI Career OS v3.1</span></h1>
+    <p>إعداد مرة واحدة — وبعدها زرار واحد يملأ كل حاجة</p>
   </header>
 
+  <!-- ============ ONBOARDING: 3 خطوات بس ============ -->
   <div class="card">
-    <div class="row">
-      <div><div class="lbl">الوكيل شغال؟</div><div class="hint">ON = حظر التتبع + الزرار البرتقالي في الصفحات</div></div>
-      <label class="switch"><input type="checkbox" id="onOff"><span class="slider"></span></label>
+    <div class="step">
+      <div class="num" id="step1num">1</div>
+      <div class="body">
+        <div class="t">مفتاح الذكاء الاصطناعي <span id="step1ok"></span></div>
+        <input type="password" id="apiKey" placeholder="الصق مفتاح Groq هنا (gsk_...)">
+        <div class="hint">مجاني من <a href="https://console.groq.com/keys" target="_blank" style="color:var(--orange);font-weight:700;">console.groq.com/keys</a></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num" id="step2num">2</div>
+      <div class="body">
+        <div class="t">بياناتك <span id="step2ok"></span></div>
+        <div id="dropZone" title="أو دوس عليه واختار الملف">
+          <div class="ico">📥</div>
+          <div class="t">اسحب profile.json وأفلته هنا</div>
+          <div class="hint" style="margin-top:2px;">أو دوس على الخانة — ولو حصلت مشكلة: <a href="#" id="openOptions" style="color:var(--orange);font-weight:700;">افتح صفحة الرفع الكاملة ↗</a></div>
+        </div>
+        <textarea id="pasteJson" placeholder='أو الصق الـ JSON هنا مباشرة: {"full_name": "...", ...}' style="display:none;height:80px;font-size:10.5px;"></textarea>
+        <div class="grid2" style="margin-top:6px;">
+          <button id="togglePaste" class="ghost">📋 الصق JSON بدلاً من الملف</button>
+          <button id="downloadTemplate" class="ghost">⬇️ حمّل ملف فارغ</button>
+        </div>
+        <button id="savePaste" style="display:none;">💾 حفظ البيانات</button>
+        <div id="profileName" class="hint"></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num" id="step3num">3</div>
+      <div class="body">
+        <div class="row">
+          <div class="t">شغّل الوكيل <span id="step3ok"></span></div>
+          <label class="switch"><input type="checkbox" id="onOff"><span class="slider"></span></label>
+        </div>
+        <div class="hint">ON = الزرار البرتقالي يظهر في كل صفحات التقديم + حظر التتبع</div>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="lbl">🔑 Groq API Key</div>
-    <input type="password" id="apiKey" placeholder="gsk_...">
-    <div class="lbl" style="margin-top:8px;">📄 profile.json</div>
-    <input type="file" id="profileFile" accept=".json" style="font-size:10px;">
-    <div id="profileName" class="hint"></div>
-    <div class="lbl" style="margin-top:8px;">🔒 الخزنة (تشفير AES-256 للبيانات الحساسة)</div>
-    <div class="hint">بعد التفعيل: ملف البروفايل مشفر بالكامل، ومفتاح فك التشفير يعيش في الذاكرة المؤقتة لحد قفل المتصفح</div>
-    <div class="vaultrow">
-      <input type="password" id="vaultPass" placeholder="Master password">
-    </div>
-    <div class="vaultrow">
-      <button id="vaultEnable" class="sec">تفعيل</button>
-      <button id="vaultUnlock" class="sec">فتح</button>
-      <button id="vaultDisable" class="ghost">إيقاف</button>
-    </div>
-    <div id="vaultStatus" class="hint"></div>
-  </div>
-
-  <div class="card">
-    <div class="lbl">🧠 ذكاء الإجابات</div>
-    <select id="persona">
-      <option value="Balanced">⚖️ Balanced</option>
-      <option value="Manager">👔 Manager</option>
-      <option value="Technical">🔬 Technical</option>
-      <option value="Executive">📈 Executive</option>
-    </select>
-    <div class="row" style="margin-top:8px;">
-      <div><div class="lbl">Next تلقائي</div><div class="hint">افتراضياً: يدوي (أأمن)</div></div>
-      <label class="switch"><input type="checkbox" id="autoNext"><span class="slider"></span></label>
-    </div>
-    <div class="row" style="margin-top:6px;">
-      <div><div class="lbl">إيميل alias خاص</div><div class="hint">name+company@gmail.com لكل تقديم</div></div>
-      <label class="switch"><input type="checkbox" id="aliasMode"><span class="slider"></span></label>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="lbl">🎯 أدوات صفحة الوظيفة (اقرأ JD من التاب المفتوح)</div>
-    <div class="grid2">
-      <button id="scoreJD" class="sec">📊 قيّم نسبة التوافق</button>
-      <button id="coverLetter" class="sec">✉️ خطاب تعريفي</button>
-      <button id="tailorCV" class="sec">🧬 CV مفصّل ATS</button>
-      <button id="interviewPrep" class="sec">🎙 تدريب مقابلة صوتي</button>
-    </div>
-    <div id="out"></div>
-    <button id="copyOut" class="ghost" style="display:none;">📋 نسخ</button>
-  </div>
-
-  <div class="card">
-    <div class="lbl">⚡ تقديم جماعي (URL في كل سطر)</div>
-    <textarea id="bulkUrls" placeholder="https://company1.wd3.myworkdayjobs.com/...
-https://company2.greenhouse.io/..."></textarea>
-    <button id="bulkRun">🚀 افتح واملأ كل التابات (تقدر تراجع كل واحدة)</button>
-  </div>
-
-  <div class="card">
-    <div class="row">
-      <div><div class="lbl">📋 سجل التقديمات</div><div class="hint">+ مواعيد متابعة 7 و14 يوم (ICS)</div></div>
-      <span id="trackCount" class="lbl" style="background:var(--navy);color:#fff;padding:3px 10px;border-radius:12px;">0</span>
-    </div>
-    <div class="grid2">
-      <button id="exportCsv" class="ghost">⬇️ CSV</button>
-      <button id="followIcs" class="ghost">📅 مواعيد متابعة</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="lbl">🌐 Swarm Blueprints (خرائط المواقع المتعلمة)</div>
-    <div class="grid2">
-      <button id="bpExport" class="ghost">⬆️ تصدير</button>
-      <button id="bpImport" class="ghost">⬇️ استيراد</button>
-    </div>
-    <input type="file" id="bpFile" accept=".json" style="display:none;">
-  </div>
-
-  <div class="card">
-    <div class="row">
-      <div><div class="lbl">🧨 مسح كل البيانات المحلية</div><div class="hint">مفاتيح + بروفايل + سجلات — نهائي</div></div>
-      <button id="wipeAll" style="background:#c0392b;width:auto;margin:0;padding:6px 12px;">مسح</button>
-    </div>
-  </div>
-
+  <!-- ============ الزرار الرئيسي ============ -->
   <div class="card">
     <button id="fillNow">🚀 املأ الصفحة الحالية</button>
     <div id="status"></div>
   </div>
 
+  <!-- ============ أدوات صفحة الوظيفة ============ -->
+  <details>
+    <summary>🎯 أدوات الوظيفة (تقييم، خطاب، CV، مقابلة)</summary>
+    <div class="inner">
+      <div class="hint" style="margin-bottom:6px;">افتح صفحة الوظيفة الأول ثم اختر الأداة — بتقرأ الوصف تلقائياً</div>
+      <div class="grid2">
+        <button id="scoreJD" class="sec">📊 نسبة التوافق</button>
+        <button id="coverLetter" class="sec">✉️ خطاب تعريفي</button>
+        <button id="tailorCV" class="sec">🧬 CV مفصّل ATS</button>
+        <button id="interviewPrep" class="sec">🎙 تدريب مقابلة</button>
+      </div>
+      <select id="persona">
+        <option value="Balanced">⚖️ نبرة متوازنة</option>
+        <option value="Manager">👔 نبرة قيادية</option>
+        <option value="Technical">🔬 نبرة فنية</option>
+        <option value="Executive">📈 نبرة تنفيذية</option>
+      </select>
+      <div id="out"></div>
+      <button id="copyOut" class="ghost" style="display:none;">📋 نسخ</button>
+    </div>
+  </details>
+
+  <!-- ============ تقديم جماعي ============ -->
+  <details>
+    <summary>⚡ تقديم جماعي (أكثر من وظيفة)</summary>
+    <div class="inner">
+      <textarea id="bulkUrls" placeholder="لينك الوظيفة في كل سطر..."></textarea>
+      <button id="bulkRun">🚀 افتح واملأ التابات — والمراجعة بيدك</button>
+    </div>
+  </details>
+
+  <!-- ============ السجل ============ -->
+  <details>
+    <summary>📋 سجل تقديماتي <span id="trackCount" style="background:var(--navy);color:#fff;font-size:10px;padding:1px 9px;border-radius:10px;">0</span></summary>
+    <div class="inner">
+      <div class="grid2">
+        <button id="exportCsv" class="ghost">⬇️ تصدير CSV</button>
+        <button id="followIcs" class="ghost">📅 مواعيد متابعة</button>
+      </div>
+    </div>
+  </details>
+
+  <!-- ============ إعدادات متقدمة ============ -->
+  <details>
+    <summary>⚙️ إعدادات متقدمة</summary>
+    <div class="inner">
+      <div class="row">
+        <div><div class="lbl">ضغط Next تلقائي</div><div class="hint">افتراضياً يدوي — أأمن</div></div>
+        <label class="switch"><input type="checkbox" id="autoNext"><span class="slider"></span></label>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <div><div class="lbl">إيميل alias لكل موقع</div><div class="hint">name+site@gmail.com</div></div>
+        <label class="switch"><input type="checkbox" id="aliasMode"><span class="slider"></span></label>
+      </div>
+      <div class="lbl" style="margin-top:10px;">🔒 الخزنة — تشفير AES-256 لبياناتك</div>
+      <div class="hint">بعد التفعيل بياناتك مشفرة بالكامل وكلمة السر تعيش في الذاكرة لحد قفل المتصفح</div>
+      <input type="password" id="vaultPass" placeholder="كلمة سر رئيسية (8 أحرف+)" style="margin-top:4px;">
+      <div class="grid2" style="grid-template-columns:1fr 1fr 1fr;">
+        <button id="vaultEnable" class="sec">تفعيل</button>
+        <button id="vaultUnlock" class="sec">فتح</button>
+        <button id="vaultDisable" class="ghost">إيقاف</button>
+      </div>
+      <div id="vaultStatus" class="hint"></div>
+      <div class="lbl" style="margin-top:10px;">🌐 خرائط المواقع المتعلمة</div>
+      <div class="grid2">
+        <button id="bpExport" class="ghost">⬆️ تصدير</button>
+        <button id="bpImport" class="ghost">⬇️ استيراد</button>
+      </div>
+      <input type="file" id="bpFile" accept=".json" style="display:none;">
+      <div class="row" style="margin-top:12px;">
+        <div><div class="lbl" style="color:#c0392b;">🧨 مسح كل البيانات</div></div>
+        <button id="wipeAll" style="background:#c0392b;width:auto;margin:0;padding:6px 12px;">مسح نهائي</button>
+      </div>
+    </div>
+  </details>
+
+  <div style="height:10px;"></div>
   <script src="popup.js"></script>
 </body>
 </html>

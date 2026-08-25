@@ -457,6 +457,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
             return sendResponse({ ok: false, error: "Wrong password." });
           }
         }
+        // Replace the encrypted profile with a newly uploaded one (popup/options
+        // upload paths). Requires an unlocked vault — never touches plaintext.
+        case "VAULT_REPLACE": {
+          const { vaultEnabled } = await chrome.storage.local.get("vaultEnabled");
+          if (!vaultEnabled) return sendResponse({ ok: false, error: "Vault not enabled." });
+          const { vaultPass } = await chrome.storage.session.get("vaultPass");
+          if (!vaultPass) return sendResponse({ ok: false, error: "Vault locked — unlock first (advanced settings)." });
+          const vault = await vaultEncrypt(msg.profile, vaultPass);
+          await chrome.storage.local.set({ vault });
+          await chrome.storage.local.set({ profileName: msg.name || "profile.json" });
+          return sendResponse({ ok: true });
+        }
         case "VAULT_STATUS": {
           const { vaultEnabled } = await chrome.storage.local.get("vaultEnabled");
           const { vaultPass } = await chrome.storage.session.get("vaultPass");

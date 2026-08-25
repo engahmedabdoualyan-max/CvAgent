@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>CvAgent — رفع البيانات</title>
+<style>
+  :root { --navy:#1F3A5F; --orange:#E87722; --green:#27ae60; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,Arial,sans-serif; }
+  body { background:#f4f6f9; color:#2E3440; min-height:100vh; padding:34px 18px; }
+  .wrap { max-width:640px; margin:0 auto; }
+  h1 { color:var(--navy); font-size:24px; display:flex; align-items:center; gap:10px; }
+  .sub { color:#7a8494; font-size:13px; margin:6px 0 22px; line-height:1.8; }
+  .card { background:#fff; border-radius:14px; padding:24px; box-shadow:0 3px 16px rgba(0,0,0,.07); margin-bottom:16px; }
+  .card h2 { color:var(--navy); font-size:15px; margin-bottom:12px; }
+  #dropZone { border:3px dashed #b8c4d2; border-radius:14px; padding:44px 20px; text-align:center;
+              cursor:pointer; transition:.15s; background:#fafbfd; }
+  #dropZone:hover, #dropZone.drag { border-color:var(--orange); background:#fff4ec; }
+  #dropZone .ico { font-size:40px; }
+  #dropZone .t { font-size:16px; font-weight:800; color:var(--navy); margin-top:8px; }
+  #dropZone .h { font-size:12px; color:#7a8494; margin-top:4px; }
+  #realFile { display:none; }
+  textarea { width:100%; min-height:150px; padding:12px; border:1px solid #d5dde6; border-radius:10px;
+             font-size:12px; direction:ltr; text-align:left; font-family:monospace; }
+  button { padding:11px 26px; border:none; border-radius:9px; background:var(--orange); color:#fff;
+           font-weight:800; font-size:14px; cursor:pointer; margin-top:12px; }
+  button.ghost { background:var(--navy); }
+  #msg { margin-top:14px; font-weight:800; font-size:14px; min-height:20px; }
+  .ok { color:var(--green); } .err { color:#c0392b; }
+  .steps { font-size:12.5px; color:#4a5568; line-height:2; background:var(--navy); color:#fff;
+           border-radius:14px; padding:16px 20px; }
+  .steps b { color:#ffb37e; }
+  a { color:var(--orange); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🤖 رفع بياناتك — CvAgent</h1>
+  <div class="sub">الصفحة دي بيئة ثابتة 100% — مفيش نوافذ بتقفل ولا حالة بتضيع. اختار الطريقة اللي تريحك.</div>
+
+  <div class="card">
+    <h2>الطريقة 1 — اسحب وأفلت</h2>
+    <div id="dropZone">
+      <div class="ico">📥</div>
+      <div class="t">اسحب profile.json من جهازك وأفلته هنا</div>
+      <div class="h">أو دوس على الخانة عشان تفتح نافذة اختيار الملف (هنا مستقرة تماماً)</div>
+    </div>
+    <input type="file" id="realFile" accept=".json,application/json">
+  </div>
+
+  <div class="card">
+    <h2>الطريقة 2 — الصق الـ JSON</h2>
+    <textarea id="pasteJson" placeholder='{"full_name": "Ahmed Alyan", "email": "you@mail.com", ...}'></textarea>
+    <button id="savePaste">💾 حفظ البيانات</button>
+  </div>
+
+  <div class="card steps">
+    <b>محتاج تعمل ملف profile.json؟</b><br>
+    1. حمّل القالب الجاهز من <a href="https://raw.githubusercontent.com/engahmedabdoualyan-max/CvAgent/main/job-agent/profile.json" target="_blank">هنا (GitHub)</a><br>
+    2. افتحه بأي محرر نصوص واملا بياناتك<br>
+    3. ارجع للصفحة دي واسحبه
+  </div>
+
+  <div id="msg"></div>
+</div>
+<script src="options.js"></script>
+</body>
+</html>
