@@ -49,3 +49,26 @@ $("savePaste").addEventListener("click", () => {
   try { saveProfile(JSON.parse($("pasteJson").value), "pasted JSON"); }
   catch (e) { setMsg("❌ الـ JSON غير صالح: " + e.message, false); }
 });
+
+// local template generator — no external links needed
+$("dlTemplate").addEventListener("click", () => {
+  const tpl = {
+    full_name: "", first_name: "", middle_name: "", last_name: "", arabic_name: "",
+    title: "", email: "", phone_ksa: "", phone_egypt: "", nationality: "", date_of_birth: "",
+    current_location: { city: "", province_state: "", country: "", postal_code: "", full_address: "" },
+    ids: { iqama_number: "", saudi_council_of_engineers: "" },
+    languages: [], summary: "", total_years_experience: 0,
+    education: [], experience: [], skills: [], certifications: [],
+    booleans: {
+      legally_authorized_to_work: true, willing_to_relocate: true, willing_to_travel: true,
+      currently_employed: true, over_18: true, agreed_to_terms: true
+    },
+    links: { linkedin: "" }
+  };
+  const blob = new Blob([JSON.stringify(tpl, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "profile.json";
+  a.click();
+  setMsg("✔ القالب اتحمل — املاه وارفعه تاني", true);
+});
