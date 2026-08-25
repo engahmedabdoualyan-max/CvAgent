@@ -10,6 +10,14 @@ let RUNNING = false;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Extension context guard: after the extension is reloaded/updated, old
+// content scripts keep running with a DEAD chrome.runtime — every chrome.*
+// call then throws "Extension context invalidated". We detect that state,
+// quietly retire the old scripts (remove pill/mic) and stop touching APIs.
+const ctxAlive = () => {
+  try { return !!(chrome.runtime && chrome.runtime.id); } catch (e) { return false; }
+};
+
 // ---------------------------------------------------------------- pill UI
 function ensurePill() {
   if (document.getElementById("cvagent-pill")) return;
@@ -416,8 +424,12 @@ const normKey = (f) =>
     .toLowerCase().replace(/\s+/g, " ").trim().slice(0, 90);
 
 async function applyLearned(fields) {
+  if (!ctxAlive()) return [];
   const domain = location.hostname;
-  const { learned = {} } = await chrome.storage.local.get("learned");
+  let learned = {};
+  try {
+    learned = (await chrome.storage.local.get("learned")).learned || {};
+  } catch (e) { return []; }
   const map = learned[domain] || {};
   const pre = [];
   for (const f of fields) {
@@ -432,6 +444,7 @@ async function applyLearned(fields) {
 // ===========================================================================
 function offlineMap(fields) {
   return new Promise((resolve) => {
+    if (!ctxAlive()) return resolve([]);
     chrome.storage.local.get("profile", async ({ profile }) => {
       const p = profile || (await chrome.runtime.sendMessage({ type: "GET_PLAIN_PROFILE" }).catch(() => ({}))) || {};
       // Arabic rules FIRST (more specific), then English
@@ -585,6 +598,7 @@ async function snapshotPage() {
 
 // ---------------------------------------------------------------- main flow
 async function runAgent() {
+  if (!ctxAlive()) { removePill(); hideMic(); return; }
   if (RUNNING) return;
   RUNNING = true;
   try {
@@ -718,7 +732,8 @@ function refineSpeech(text) {
 }
 
 function showMic() {
-  const st = chrome.storage.local.get("agentOn").then(({ agentOn }) => {
+  if (!ctxAlive()) { hideMic(); removePill(); return; }
+  chrome.storage.local.get("agentOn").then(({ agentOn }) => {
     const active = document.activeElement;
     const isText = active && (active.tagName === "TEXTAREA" || (active.tagName === "INPUT" && /text|search|email|url|tel/i.test(active.type)));
     if (!agentOn || !isText) { hideMic(); return; }
@@ -773,6 +788,7 @@ async function applyState() {
 // so it never fires on random websites)
 // ===========================================================================
 async function maybeAutoRun() {
+  if (!ctxAlive()) { removePill(); hideMic(); return; }
   try {
     const st = await chrome.storage.local.get(["agentOn", "autoRun"]);
     if (!st.agentOn || !st.autoRun) return;

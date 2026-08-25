@@ -20,8 +20,12 @@
 // ===========================================================================
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODELS_URL = "https://api.groq.com/openai/v1/models";
 const DEFAULT_MODEL = "llama-3.3-70b-versatile";
 const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+// Groq retires model names from time to time — instead of hardcoding one,
+// we auto-discover whatever is LIVE on the user's account.
+const MODEL_PRIORITY = [/70b/i, /gpt-oss/i, /kimi/i, /qwen/i, /llama-?4/i, /8b/i, /gemma/i];
 
 // ---------------------------------------------------------------------------
 // SYSTEM PROMPT
@@ -91,22 +95,76 @@ field MUST receive a fill/select/pick/click action derived from the profile —
 "skip" is FORBIDDEN. If a label is Arabic, answer in Arabic.`;
 
 // ---------------------------------------------------------------------------
-// Groq chat (text or vision)
+// Groq chat (text or vision) — with automatic model discovery:
+// Groq 404s when a model name gets retired. We query /models, pick the best
+// LIVE model on the account, cache it for the session, and re-negotiate
+// mid-flight if it 404s again.
 // ---------------------------------------------------------------------------
+async function listGroqModels(apiKey) {
+  try {
+    const r = await fetch(GROQ_MODELS_URL, { headers: { Authorization: "Bearer " + apiKey } });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return (d.data || []).map((m) => m.id);
+  } catch (e) { return []; }
+}
+
+async function getWorkingModel(apiKey, preferred) {
+  const { workModel } = await chrome.storage.session.get("workModel");
+  if (workModel) return workModel;
+  const ids = await listGroqModels(apiKey);
+  if (ids.length) {
+    if (preferred && ids.includes(preferred)) {
+      await chrome.storage.session.set({ workModel: preferred });
+      return preferred;
+    }
+    for (const p of MODEL_PRIORITY) {
+      const hit = ids.find((id) => p.test(id));
+      if (hit) {
+        await chrome.storage.session.set({ workModel: hit });
+        console.log("[CvAgent] using live Groq model:", hit);
+        return hit;
+      }
+    }
+    await chrome.storage.session.set({ workModel: ids[0] });
+    return ids[0];
+  }
+  return preferred || DEFAULT_MODEL;
+}
+
+async function getVisionModel(apiKey) {
+  const ids = await listGroqModels(apiKey);
+  return ids.find((id) => /scout|vision|maverick/i.test(id)) || null;
+}
+
 async function groqChat(apiKey, model, messages, jsonMode = true) {
-  const body = { model, temperature: 0, messages };
-  if (jsonMode) body.response_format = { type: "json_object" };
-  const resp = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  if (resp.status === 401) throw new Error("Invalid API key (401)");
-  if (resp.status === 429) throw new Error("Rate limited (429)");
-  if (!resp.ok) throw new Error("Groq HTTP " + resp.status);
-  let content = (await resp.json()).choices[0].message.content.trim();
-  content = content.replace(/^```(json)?/m, "").replace(/```$/m, "").trim();
-  return jsonMode ? JSON.parse(content) : content;
+  let useModel = await getWorkingModel(apiKey, model);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const body = { model: useModel, temperature: 0, messages };
+    if (jsonMode) body.response_format = { type: "json_object" };
+    const resp = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (resp.status === 404) {
+      console.warn("[CvAgent] Groq model retired:", useModel, "— renegotiating...");
+      await chrome.storage.session.remove("workModel");
+      const ids = await listGroqModels(apiKey);
+      useModel = ids.find((id) => id !== useModel) || useModel;
+      if (ids.length) await chrome.storage.session.set({ workModel: useModel });
+      continue;
+    }
+    if (resp.status === 401) throw new Error("Invalid API key (401)");
+    if (resp.status === 429) throw new Error("Rate limited (429) — wait a moment");
+    if (!resp.ok) throw new Error("Groq HTTP " + resp.status);
+    let content = (await resp.json()).choices[0].message.content.trim();
+    content = content.replace(/^```(json)?/m, "").replace(/```$/m, "").trim();
+    const parsed = jsonMode ? JSON.parse(content) : content;
+    if (jsonMode && !Array.isArray(parsed.actions)) throw new Error("LLM returned no actions[]");
+    return parsed;
+  }
+  throw new Error("Groq model negotiation failed");
 }
 
 const parseJSONsafe = (s, fb) => { try { return JSON.parse(s); } catch (e) { return fb; } };
@@ -420,7 +478,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           const st = await chrome.storage.local.get(["apiKey"]);
           if (!st.apiKey) return sendResponse({ ok: false, error: "No API key." });
           const dataUrl = await chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: "png" });
-          const hint = await groqChat(st.apiKey, VISION_MODEL, [
+          const vm = await getVisionModel(st.apiKey);
+          if (!vm) return sendResponse({ ok: false, error: "No vision model available on your Groq account" });
+          const hint = await groqChat(st.apiKey, vm, [
             { role: "user", content: [
               { type: "text", text: "This screenshot contains a CAPTCHA or human-verification challenge. In 1-2 short sentences, tell the user EXACTLY what to do to solve it (which images/letters to pick, what to type). If unreadable, say so." },
               { type: "image_url", image_url: { url: dataUrl } }
