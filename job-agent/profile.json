@@ -1,0 +1,140 @@
+{
+  "_note": "PRIVATE DATA RULE: never commit your real iqama here. Copy this file to profile.local.json, put your real iqama number in it, and the agent will auto-merge it at runtime. profile.local.json is git-ignored.",
+  "full_name": "Ahmed Mohamed Abdo Elsayed Alyan",
+  "first_name": "Ahmed",
+  "middle_name": "Mohamed Abdo Elsayed",
+  "last_name": "Alyan",
+  "arabic_name": "أحمد محمد عبده السيد عليان",
+  "title": "Ready-Mix Concrete Plants & Crushers Manager",
+  "email": "ahmed.abdoualyan@gmail.com",
+  "phone_ksa": "+966500439617",
+  "phone_ksa_national": "0500439617",
+  "phone_egypt": "+201001006627",
+  "nationality": "Egyptian",
+  "date_of_birth": "01/19/1987",
+  "gender": "Male",
+  "current_location": {
+    "city": "Dammam",
+    "province_state": "Eastern Province",
+    "country": "Saudi Arabia",
+    "postal_code": "31411",
+    "full_address": "Dammam, Eastern Province, Saudi Arabia"
+  },
+  "ids": {
+    "iqama_number": "YOUR_IQAMA_NUMBER",
+    "iqama_expiry": "MM/DD/YYYY",
+    "saudi_council_of_engineers": "1128453"
+  },
+  "languages": [
+    {"language": "Arabic", "proficiency": "Native"},
+    {"language": "English", "proficiency": "Professional working proficiency"}
+  ],
+  "summary": "Ready-Mix Concrete Plants & Crushers Manager with 20+ years of hands-on experience operating batching plants, crushers and quality control across Saudi Arabia and Egypt. Managed 6+ plants and doubled production output (x2) through bottleneck fixes and strict QA/QC. M.Sc. in Engineering Economics & Concrete/Batching Plants Management; PhD candidate in AI-driven management; developer of Concrete Plant ERP and SmartLab systems.",
+  "total_years_experience": 20,
+  "education": [
+    {
+      "degree": "PhD Candidate - Civil Engineering (AI-Driven Management of Future Technological Challenges)",
+      "school": "Benha University - Faculty of Engineering (Shoubra)",
+      "dates": "2023-2025",
+      "notes": "Academic phase completed 2025, defense procedures underway"
+    },
+    {
+      "degree": "M.Sc. Civil Engineering - Engineering Economics, Concrete Labs & Batching Plants Management",
+      "school": "Benha University",
+      "dates": "2022",
+      "grade": "Excellent, GPA 3.67",
+      "thesis": "An Economic Study for The Effect of Random Vehicles in Transport System"
+    },
+    {
+      "degree": "B.Sc. Civil Engineering",
+      "school": "Benha University - Faculty of Engineering (Shoubra)",
+      "dates": "2018",
+      "grade": "Good - Graduation Project: Excellent"
+    },
+    {
+      "degree": "Diploma - Automatic Control & Machinery Maintenance",
+      "school": "Industrial Technical Institute, Benha",
+      "dates": "2005",
+      "grade": "Excellent with Honors"
+    }
+  ],
+  "experience": [
+    {
+      "title": "Executive Director",
+      "company": "Sand Point Contracting",
+      "location": "Dammam, Saudi Arabia",
+      "dates": "2026-Present",
+      "description": "Leading full company operations: project delivery, resources and team management, client and supplier relations."
+    },
+    {
+      "title": "Manager of Concrete Plants, Crushers & Quality Control -> Project Manager (internal promotion)",
+      "company": "Bakhroush Saad Bakhroush & Partners for Trading & Contracting",
+      "location": "Al-Baha, Saudi Arabia",
+      "dates": "2025-2026",
+      "description": "Operated 3 concrete/asphalt batching plants + 1 crusher across Al-Baha, Shamarikh and Baydah. Doubled production output (x2). Promoted to Project Manager for asphalt paving & land-grant schemes (King Fahd Scheme), accredited by Al-Baha Municipality, contracts exceeding SAR 41M."
+    },
+    {
+      "title": "Executive Director",
+      "company": "Aflak Al-Mimar Real Estate Development",
+      "location": "Jizan, Saudi Arabia",
+      "dates": "2025",
+      "description": "Managed 3 ready-mix plants (Jizan & Sabya), Akwa crusher and transport fleet: production, quality, maintenance, costing."
+    },
+    {
+      "title": "Director of Engineering & Operations",
+      "company": "Al-Madina Co. (Arab Organization for Industrialization - Saqr Factory)",
+      "location": "Egypt",
+      "dates": "2024",
+      "description": "Manufacturing and QA review of specialized concrete mixers; restoration of heritage structures and civil defense facilities."
+    },
+    {
+      "title": "Head of Civil Engineering Department",
+      "company": "Kortech (Hassan Allam Group)",
+      "location": "Al-Arish International Airport, Egypt",
+      "dates": "2023-2024",
+      "description": "Led all civil and infrastructure works for military and civilian sections of the airport."
+    },
+    {
+      "title": "Concrete Laboratories Researcher",
+      "company": "Benha University - Faculty of Engineering (Shoubra)",
+      "location": "Egypt",
+      "dates": "2017-2024",
+      "description": "Applied research on concrete density, fire resistance, durability and admixture effects on compressive strength."
+    }
+  ],
+  "skills": [
+    "Batching plant operations",
+    "Mix design & compliance",
+    "QA/QC laboratory & field testing",
+    "Crushers & aggregates supply chain",
+    "Preventive maintenance",
+    "Production scheduling",
+    "ISO 9001/14001/45001 internal auditor",
+    "AutoCAD, Civil 3D, SAP2000, ETABS, SIDRA, Synchro",
+    "ERP development for concrete plants"
+  ],
+  "certifications": [
+    "Certified ISO Internal Auditor (9001:2015, 14001:2015, 45001:2018) - American Quality Institute",
+    "PMP - Project Management Professional (5th Edition)",
+    "Google Digital Marketing & E-commerce Professional",
+    "Institutional TOEFL 673"
+  ],
+  "booleans": {
+    "legally_authorized_to_work": true,
+    "has_valid_ksa_residency": true,
+    "willing_to_relocate": true,
+    "willing_to_travel": true,
+    "currently_employed": true,
+    "currently_work_here_flag_for_past_jobs": false,
+    "over_18": true,
+    "consent_data_processing": true,
+    "agreed_to_terms": true,
+    "no_relatives_in_company": true,
+    "never_convicted": true
+  },
+  "links": {
+    "linkedin": "https://www.linkedin.com/",
+    "concrete_erp": "https://concrete.fimtosoft.com",
+    "smartlab": "https://smartlab.fimtosoft.com"
+  }
+}

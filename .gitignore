@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Private data — NEVER commit
+profile.local.json
+agent_report.json
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
